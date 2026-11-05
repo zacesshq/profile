@@ -10,6 +10,7 @@ use zacess_profile::{Profile, derive, render};
 const SNAPSHOT_PROFILES: &[&str] = &[
     "profiles/zacess-deep-contrast-dark.toml",
     "spec/examples/minimal.toml",
+    "spec/examples/every-need.toml",
 ];
 
 fn root() -> PathBuf {
@@ -93,6 +94,28 @@ fn vscode_output_is_valid_json_with_every_token() {
     assert_eq!(comment["settings"]["fontStyle"], "italic");
     assert_eq!(json["workbench.reduceMotion"], "on");
     assert_eq!(json["editor.fontSize"], 24);
+}
+
+#[test]
+fn surface_alt_falls_back_to_surface_in_every_render() {
+    let vscode = render::target("vscode").unwrap();
+    let colours = |profile: &Profile| -> serde_json::Value {
+        let text = render::render(profile, vscode).unwrap();
+        serde_json::from_str::<serde_json::Value>(&text).unwrap()["workbench.colorCustomizations"]
+            .clone()
+    };
+    let mut profile = complete(SNAPSHOT_PROFILES[1]);
+    assert_eq!(profile.palette.surface_alt, None);
+    let surface = profile.palette.surface.unwrap().hex();
+    let left_out = colours(&profile);
+    assert_eq!(left_out["activityBar.background"], surface.as_str());
+    assert_eq!(left_out["statusBar.background"], surface.as_str());
+
+    profile.palette.surface_alt = Some("#202020".parse().unwrap());
+    let set = colours(&profile);
+    assert_eq!(set["activityBar.background"], "#202020");
+    assert_eq!(set["titleBar.activeBackground"], "#202020");
+    assert_eq!(set["sideBar.background"], surface.as_str());
 }
 
 #[test]

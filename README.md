@@ -1,4 +1,9 @@
-# Zacess Profile
+<h1>
+  <picture>
+    <source media="(prefers-color-scheme: dark)" srcset="assets/profile-lockup-dark.svg">
+    <img src="assets/profile-lockup-light.svg" alt="Zacess Profile" width="400">
+  </picture>
+</h1>
 
 State what you need to read a screen once. Get a checked palette in every terminal and editor.
 
@@ -6,9 +11,11 @@ State what you need to read a screen once. Get a checked palette in every termin
 [![Licence](https://img.shields.io/badge/licence-Apache--2.0-blue.svg)](LICENSE)
 
 `zprf` reads a small TOML file that describes needs: a contrast floor, a font and size,
-reduced motion, a cursor size, line spacing and a line length. It derives any colour the file leaves
-out, checks every foreground and background pair against WCAG 2.2 and writes config files for
-Ghostty, kitty, WezTerm, Alacritty, tmux, Neovim and VS Code.
+reduced motion, a cursor size, a focus ring, line spacing and a line length. It derives any colour
+the file leaves out, checks every foreground and background pair against WCAG 2.2, checks that
+neighbouring colours stay apart under simulated colour vision deficiencies and writes config files
+for Ghostty, kitty, WezTerm, Alacritty, tmux, Neovim and VS Code. A browser extension applies the
+same profile to every web page.
 
 ## Why it exists
 
@@ -23,8 +30,11 @@ anything that breaks it:
   solved in OKLCH to meet the profile's own floors.
 - **Fails loudly.** A pair below its floor is named with both colours, the measured ratio and the
   floor it missed. `render` writes nothing until every pair passes.
-- **More than colour.** Font, size, line spacing, cursor size, reduced motion and a line length
-  ruler are written to each app that has a setting for them.
+- **Distinct for every viewer.** Neighbouring syntax colours, added and removed lines and errors and
+  warnings must differ in tone and stay apart under simulated protanopia, deuteranopia and
+  tritanopia, using the same rules as the Zacess themes.
+- **More than colour.** Font, size, line spacing, cursor size, focus ring, reduced motion, one
+  column, no decoration and a line length ruler are written to each app that has a setting for them.
 - **An open format.** The profile is specified in [spec/SPEC.md](spec/SPEC.md) with a
   [JSON Schema](spec/profile.schema.json), versioned apart from the tool, so any app can read a
   profile without it.
@@ -32,16 +42,17 @@ anything that breaks it:
 ```mermaid
 flowchart LR
     P["profile.toml<br/>needs plus any colours"] --> D["derive<br/>fill the gaps in OKLCH"]
-    D --> C{"check<br/>every pair against<br/>the floors"}
-    C -- "a pair fails" --> F["stop and name<br/>the pair and its ratio"]
-    C -- "every pair passes" --> R["render<br/>config files for each target"]
+    D --> C{"check<br/>every pair against the floors<br/>and under colour vision simulation"}
+    C -- "a pair fails" --> F["stop and name<br/>the pair and its value"]
+    C -- "every pair passes" --> R["render or watch<br/>config files for each target"]
     C -- "every pair passes" --> A["apply --live<br/>OSC 4, 10, 11 and 12"]
 ```
 
 ## Install
 
-There are no prebuilt binaries yet. Build from source with a Rust toolchain (1.88 or newer). This
-installs the `zprf` command:
+Prebuilt binaries for macOS, Linux and Windows are attached to each GitHub release from the next one
+on, along with a Homebrew formula and a winget package. Until then, build from source with a Rust
+toolchain (1.88 or newer). This installs the `zprf` command:
 
 ```sh
 git clone https://github.com/zacesshq/profile.git
@@ -99,6 +110,8 @@ Each colour `derive` chose is marked `# derived`, so you can tell your choices f
 | `derive <profile>` | Prints the complete profile with every derived colour marked. `--out <file>` writes it instead | 0 when the result passes. 1 when a colour you set fails, with the profile still printed. 2 when the file is unreadable or invalid or when no colour can be derived to meet a floor |
 | `render <profile> --target <name> --out <dir>` | Writes `<dir>/<target>/` from the templates. `--target all` writes every target | 0 when written. 2 when the profile is invalid, cannot be completed or fails a pair, with nothing written |
 | `apply <profile> --live` | Sends OSC 4, 10, 11 and 12 to standard output, which recolours the terminal it runs in until the terminal is reset. `--escaped` prints them as readable text with nothing sent, with or without `--live`. `--tmux` wraps them for tmux passthrough | 0 when sent. 2 when the profile is invalid, cannot be completed or fails a pair |
+| `watch <profile> --target <name> --out <dir>` | Checks and renders the profile, then does it again each time the file changes. A profile named `name-dark.toml` or `name-light.toml` is paired with the other in the same folder (`--variant` names another) and the variant matching the system's light or dark setting is rendered. Both are written under the id without its ending, so an app can point at one file. A change that fails a pair is reported and the last good files are kept. `--appearance dark` or `light` pins one variant. Runs until Ctrl+C, which ends it the way Ctrl+C ends any command | 2 at the start when the target is unknown, `--out` is empty or the variant given does not exist. A file that cannot be written later is reported and the watch carries on |
+| `os <profile> --print` | Prints the system accessibility settings the profile maps to: `defaults write` and `defaults delete` lines on macOS, `gsettings set` on GNOME and `reg add` values with their Settings page on Windows. **A preview only.** zprf never runs them and has no option to. `--platform` prints another platform's lines | 0 when printed. 2 when the profile is invalid or fails a pair |
 | `list-targets` | Lists every target with the file it writes | 0 |
 
 A mistyped command or option also exits 2.
@@ -106,7 +119,9 @@ A mistyped command or option also exits 2.
 ## What is checked
 
 Every pair is measured with the WCAG 2.2 contrast formula and held to a floor from
-`[needs.contrast]`. The defaults follow the Zacess themes.
+`[needs.contrast]`. The defaults follow the Zacess themes. Panels are `surface` and, when a profile
+sets it, the second panel colour `surface_alt` that some apps draw behind their activity and status
+bars and inactive tabs.
 
 | Floor | Default | Pairs |
 | --- | --- | --- |
@@ -116,19 +131,31 @@ Every pair is measured with the WCAG 2.2 contrast formula and held to a floor fr
 | `terminal` | 7:1 | The sixteen ANSI colours on the background, apart from slots listed as background fills |
 | `terminal_dim` | 4.5:1 | ANSI slots a profile lists in `palette.terminal.dim`, which the light starter profiles use to keep their colours vivid |
 | `highlight_distance` | 0.08 | OKLab distance between the background and both the current line and a soft selection, so each stays visible |
+| `colour_vision_distance` | 0.04 | OKLab distance between paired colours under simulated protanopia, deuteranopia and tritanopia (Machado, Oliveira and Fernandes, 2009) |
+| `tone_difference` | 0.05 | Difference in tone, the cube root of relative luminance, between paired colours, so they differ with no colour vision at all |
+| `check_error_warning` | on | Whether errors and warnings are held to the two floors above as a pair |
 | `apca` | off | An optional APCA Lc floor for text on the background, checked on top of WCAG |
+
+The paired colours are the neighbouring syntax roles the Zacess themes pair, such as functions and
+types or strings and comments, checked when the two share a font style. Strings and numbers,
+strings and regular expressions, strings and invalid code, the three diff colours and errors and
+warnings are often red and green, so they are checked whatever their style. The full list is in
+[the spec](spec/SPEC.md#pairs).
 
 ## Targets
 
 | Target | App | File written | What it sets |
 | --- | --- | --- | --- |
-| `ghostty` | Ghostty | `ghostty/<id>` | Palette, cursor, selection, `minimum-contrast` at the text floor, a block cursor kept through shell integration, cursor blink, font, size and cell height |
-| `kitty` | kitty | `kitty/<id>.conf` | Palette, cursor, selection, tabs, borders, URL colour, a block cursor kept through shell integration, cursor blink, font, size and cell height |
-| `wezterm` | WezTerm | `wezterm/<id>.lua` | Palette, tab bar, cursor style and blink, animation rate, font, size and line height |
-| `alacritty` | Alacritty | `alacritty/<id>.toml` | Palette, cursor, selection, cursor shape and blink, font, size and line offset |
-| `tmux` | tmux | `tmux/<id>.tmux.conf` | Status bar, windows, pane borders, messages, copy mode and clock |
-| `neovim` | Neovim | `neovim/colors/<id>.lua` | Editor, syntax, Tree-sitter, diff and diagnostic groups, terminal colours, cursor blink and a column ruler |
-| `vscode` | VS Code | `vscode/<id>.settings.json` | A `settings.json` fragment: interface and terminal colours, token colours with font styles, font, size, line height, cursor, reduced motion, rulers and `terminal.integrated.minimumContrastRatio` |
+| `ghostty` | Ghostty | `ghostty/<id>` | Palette, cursor, selection, `minimum-contrast` at the text floor, a block cursor kept through shell integration, cursor blink, font, size, cell height and a solid background |
+| `kitty` | kitty | `kitty/<id>.conf` | Palette, cursor, selection, tabs, borders, URL colour, a block cursor kept through shell integration, cursor blink, font, size, cell height, the focus border width, a one column layout and a solid background |
+| `wezterm` | WezTerm | `wezterm/<id>.lua` | Palette, tab bar, cursor style and blink, animation rate, font, size, line height and a solid background |
+| `alacritty` | Alacritty | `alacritty/<id>.toml` | Palette, cursor, selection, cursor shape and blink, font, size, line offset and a solid background |
+| `tmux` | tmux | `tmux/<id>.tmux.conf` | Status bar, windows, pane borders, messages, copy mode, clock and heavy borders for a wide focus ring |
+| `neovim` | Neovim | `neovim/colors/<id>.lua` | Editor, syntax, Tree-sitter, diff and diagnostic groups, terminal colours, cursor blink, a column ruler, stacked diffs and no see-through windows |
+| `vscode` | VS Code | `vscode/<id>.settings.json` | A `settings.json` fragment: interface and terminal colours, token colours with font styles, font, size, line height, cursor, reduced motion, rulers, editors and diffs in one column, no minimap and `terminal.integrated.minimumContrastRatio` |
+
+[ACCESSIBILITY.md](ACCESSIBILITY.md#needs-each-target-applies) lists each need per app, including
+where an app has no setting for one.
 
 Templates are [minijinja](https://github.com/mitsuhiko/minijinja) files in [templates](templates).
 Adding a target is a template plus one entry in `src/render.rs`. [CONTRIBUTING.md](CONTRIBUTING.md)
@@ -150,17 +177,17 @@ with no colour left to derive. CI keeps it that way.
 | `zacess-deep-contrast-dark` | `#000000` | `#ffffff` | 21.00:1 |
 | `zacess-deep-contrast-light` | `#ffffff` | `#000000` | 21.00:1 |
 
+## Browser extension
+
+The [extension](extension) applies a profile to every web page in Chrome and Firefox through CSS
+custom properties: colours, font, a minimum text size, spacing, line length, the focus ring and
+reduced motion. Its options page reads the same TOML and checks it against the
+[JSON Schema](spec/profile.schema.json). It is not in the browser stores yet. Load it unpacked by
+following [extension/README.md](extension/README.md).
+
 ## Roadmap
 
-These are planned and not in version 0.1:
-
-- A daemon that watches the profile and the system's light and dark setting, then pushes changes
-  to running apps
-- A browser extension that applies the profile to every site through CSS custom properties
-- System accessibility settings on macOS, GNOME and Windows
-- More targets, including JetBrains IDEs, Zed, Helix and Windows Terminal
-- Prebuilt binaries and a Homebrew formula
-- Colour vision checks on paired tokens, as the Zacess themes already run
+[ROADMAP.md](ROADMAP.md) lists what is done, what comes next and what comes later.
 
 ## Licence
 

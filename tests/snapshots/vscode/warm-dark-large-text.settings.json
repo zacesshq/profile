@@ -14,7 +14,7 @@
     "editorWidget.border": "#6c6c6c",
     "editorGroup.border": "#6c6c6c",
     "editorError.foreground": "#ff877f",
-    "editorWarning.foreground": "#e89927",
+    "editorWarning.foreground": "#f9a93d",
     "editorInfo.foreground": "#35b3fc",
     "focusBorder": "#6badff",
     "foreground": "#ffffff",
@@ -52,8 +52,8 @@
     "panel.background": "#1b1612",
     "panel.border": "#6c6c6c",
     "gitDecoration.addedResourceForeground": "#5bbf62",
-    "gitDecoration.deletedResourceForeground": "#ff877f",
-    "gitDecoration.modifiedResourceForeground": "#5dafff",
+    "gitDecoration.deletedResourceForeground": "#ffa39b",
+    "gitDecoration.modifiedResourceForeground": "#a2d0ff",
     "terminal.background": "#1b1612",
     "terminal.foreground": "#ffffff",
     "terminalCursor.foreground": "#debb00",
@@ -92,7 +92,7 @@
       {
         "name": "changed",
         "scope": ["markup.changed"],
-        "settings": { "foreground": "#5dafff", "fontStyle": "" }
+        "settings": { "foreground": "#a2d0ff", "fontStyle": "" }
       },
       {
         "name": "comment",
@@ -102,7 +102,7 @@
       {
         "name": "control",
         "scope": ["keyword.control"],
-        "settings": { "foreground": "#f683c8", "fontStyle": "bold" }
+        "settings": { "foreground": "#ff99d5", "fontStyle": "bold" }
       },
       {
         "name": "function",
@@ -137,7 +137,7 @@
       {
         "name": "property",
         "scope": ["variable.other.property", "variable.other.object.property", "support.type.property-name", "meta.object-literal.key"],
-        "settings": { "foreground": "#9ca2ff", "fontStyle": "" }
+        "settings": { "foreground": "#c1c7ff", "fontStyle": "" }
       },
       {
         "name": "regex",
@@ -147,12 +147,12 @@
       {
         "name": "removed",
         "scope": ["markup.deleted"],
-        "settings": { "foreground": "#ff877f", "fontStyle": "" }
+        "settings": { "foreground": "#ffa39b", "fontStyle": "" }
       },
       {
         "name": "string",
         "scope": ["string"],
-        "settings": { "foreground": "#5bbf62", "fontStyle": "" }
+        "settings": { "foreground": "#8df192", "fontStyle": "" }
       },
       {
         "name": "tag",
@@ -162,7 +162,7 @@
       {
         "name": "type",
         "scope": ["entity.name.type", "entity.name.class", "support.type", "support.class"],
-        "settings": { "foreground": "#00beb6", "fontStyle": "" }
+        "settings": { "foreground": "#30cfc7", "fontStyle": "" }
       },
       {
         "name": "variable",

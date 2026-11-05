@@ -39,8 +39,8 @@ M.colors = {
   tab_bar = {
     background = "#000000",
     active_tab = { bg_color = "#00ffff", fg_color = "#000000", intensity = "Bold" },
-    inactive_tab = { bg_color = "#000000", fg_color = "#b3b3b3" },
-    inactive_tab_hover = { bg_color = "#000000", fg_color = "#ffffff" },
+    inactive_tab = { bg_color = "#0a0a0a", fg_color = "#b3b3b3" },
+    inactive_tab_hover = { bg_color = "#0a0a0a", fg_color = "#ffffff" },
     new_tab = { bg_color = "#000000", fg_color = "#b3b3b3" },
     new_tab_hover = { bg_color = "#000000", fg_color = "#ffffff" },
   },

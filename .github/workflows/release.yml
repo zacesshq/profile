@@ -1,0 +1,180 @@
+# builds zprf for each platform when a version tag is pushed, attaches each archive with its
+# SHA-256 sum to the GitHub release for that tag, then publishes the crate to crates.io through
+# Trusted Publishing. The release itself is made by a maintainer from a signed tag, so this
+# workflow waits for it and never creates one.
+#
+# assets are added after the release is published, which only works while immutable releases are
+# off for this repository. Turning them on means making each release as a draft, letting this
+# workflow attach the files, then publishing it.
+
+name: Release
+
+on:
+  push:
+    tags: ["v*"]
+
+permissions:
+  contents: read
+
+env:
+  CARGO_TERM_COLOR: always
+
+jobs:
+  version:
+    name: Tag matches Cargo.toml
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - name: Compare the tag with the crate version
+        env:
+          TAG: ${{ github.ref_name }}
+        run: |
+          version="$(sed -n 's/^version = "\(.*\)"$/\1/p' Cargo.toml | head -n 1)"
+          if [ "v$version" != "$TAG" ]; then
+            echo "::error::The tag is $TAG but Cargo.toml says $version. Tag the commit that bumps the version."
+            exit 1
+          fi
+
+  build:
+    name: ${{ matrix.target }}
+    needs: version
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - target: aarch64-apple-darwin
+            os: macos-latest
+          - target: x86_64-apple-darwin
+            os: macos-latest
+          - target: x86_64-unknown-linux-musl
+            os: ubuntu-latest
+          - target: aarch64-unknown-linux-musl
+            os: ubuntu-latest
+          - target: x86_64-pc-windows-msvc
+            os: windows-latest
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 40
+    permissions:
+      # only to attach the built files to the release of this tag
+      contents: write
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: dtolnay/rust-toolchain@b725eda525362e7cf34af9a7243cac1e3f01a7ec # stable
+        with:
+          toolchain: stable
+          targets: ${{ matrix.target }}
+      - name: Set up the musl cross toolchain
+        if: contains(matrix.target, 'musl')
+        uses: taiki-e/setup-cross-toolchain-action@12b7ad4acfa95a1476779d6c06699b96ec1691f8 # v1.42.0
+        with:
+          target: ${{ matrix.target }}
+      # no build cache here: a release binary is built from a clean checkout every time, so nothing
+      # a pull request left in a shared cache can reach it
+      - run: cargo build --release --locked --target ${{ matrix.target }}
+      - name: Package the binary with the docs and the starter profiles
+        id: package
+        shell: bash
+        env:
+          TARGET: ${{ matrix.target }}
+          TAG: ${{ github.ref_name }}
+        run: |
+          name="zacess-profile-$TAG-$TARGET"
+          mkdir "$name"
+          cp README.md LICENSE NOTICE CHANGELOG.md ACCESSIBILITY.md ROADMAP.md "$name/"
+          cp -R profiles spec "$name/"
+          if [[ "$TARGET" == *windows* ]]; then
+            cp "target/$TARGET/release/zprf.exe" "$name/"
+            7z a -tzip "$name.zip" "$name" > /dev/null
+            asset="$name.zip"
+          else
+            cp "target/$TARGET/release/zprf" "$name/"
+            tar -czf "$name.tar.gz" "$name"
+            asset="$name.tar.gz"
+          fi
+          if command -v sha256sum > /dev/null; then
+            sha256sum "$asset" > "$asset.sha256"
+          else
+            shasum -a 256 "$asset" > "$asset.sha256"
+          fi
+          cat "$asset.sha256"
+          echo "asset=$asset" >> "$GITHUB_OUTPUT"
+      - name: Wait for the release of this tag
+        shell: bash
+        env:
+          GH_TOKEN: ${{ github.token }}
+          TAG: ${{ github.ref_name }}
+        run: |
+          # the maintainer makes the release right after pushing the tag, so this is usually quick
+          for attempt in $(seq 1 40); do
+            if gh release view "$TAG" --repo "$GITHUB_REPOSITORY" > /dev/null 2>&1; then
+              exit 0
+            fi
+            echo "No release for $TAG yet (attempt $attempt of 40). Waiting 30 seconds."
+            sleep 30
+          done
+          echo "No release named $TAG exists after 20 minutes. Create it from the tag, then rerun this workflow."
+          exit 1
+      - name: Attach the files to the release
+        shell: bash
+        env:
+          GH_TOKEN: ${{ github.token }}
+          TAG: ${{ github.ref_name }}
+          ASSET: ${{ steps.package.outputs.asset }}
+        run: gh release upload "$TAG" "$ASSET" "$ASSET.sha256" --repo "$GITHUB_REPOSITORY" --clobber
+
+  # publishes the crate to crates.io through Trusted Publishing: the job proves its identity to
+  # crates.io with GitHub's OIDC token from the crates-io environment, so no crates.io token is
+  # stored anywhere. Runs only once every platform build has attached its archive, so crates.io
+  # never lists a version whose binaries are missing.
+  publish:
+    name: Publish to crates.io
+    needs: build
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    environment: crates-io
+    permissions:
+      contents: read
+      id-token: write
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - name: Skip a version crates.io already has
+        id: exists
+        env:
+          TAG: ${{ github.ref_name }}
+        run: |
+          version="${TAG#v}"
+          agent="zacess-profile release workflow (https://github.com/zacesshq/profile)"
+          crate=$(curl -s -o /dev/null -w '%{http_code}' -A "$agent" https://crates.io/api/v1/crates/zacess-profile)
+          if [ "$crate" = "404" ]; then
+            # trusted publishing can only publish a crate that already exists, so the first
+            # version is published once by hand; see .github/workflows/README.md
+            echo "::notice::zacess-profile is not on crates.io yet. Publish the first version by hand, then add the trusted publisher."
+            echo "skip=true" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+          found=$(curl -s -o /dev/null -w '%{http_code}' -A "$agent" "https://crates.io/api/v1/crates/zacess-profile/$version")
+          if [ "$found" = "200" ]; then
+            echo "::notice::zacess-profile $version is already on crates.io, so nothing was published."
+            echo "skip=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "skip=false" >> "$GITHUB_OUTPUT"
+          fi
+      - uses: dtolnay/rust-toolchain@b725eda525362e7cf34af9a7243cac1e3f01a7ec # stable
+        if: steps.exists.outputs.skip != 'true'
+        with:
+          toolchain: stable
+      - uses: rust-lang/crates-io-auth-action@3268eb413133e2960fa4ae0e963ca76380c54cd9 # v1.0.6
+        if: steps.exists.outputs.skip != 'true'
+        id: auth
+      - name: Publish
+        if: steps.exists.outputs.skip != 'true'
+        run: cargo publish --locked
+        env:
+          CARGO_REGISTRY_TOKEN: ${{ steps.auth.outputs.token }}

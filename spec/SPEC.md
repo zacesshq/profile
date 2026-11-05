@@ -73,6 +73,9 @@ down, so a printed figure never overstates the real one.
 | `terminal` | `7.0` | Each of the sixteen terminal colours on the background |
 | `terminal_dim` | `4.5` | Terminal slots listed in `palette.terminal.dim` |
 | `highlight_distance` | `0.08` | The OKLab distance from the background to the current line and to a soft selection, so neither disappears |
+| `colour_vision_distance` | `0.04` | The OKLab distance between two [paired colours](#paired-colours) as a person with protanopia, deuteranopia or tritanopia sees them |
+| `tone_difference` | `0.05` | The difference in tone between two paired colours. Tone is the cube root of relative luminance, the OKLab lightness of the grey with the same luminance, which is all a viewer with no colour vision has to go on |
+| `check_error_warning` | `true` | Whether `error` and `warning` are held to the paired colour floors as a pair. The Zacess themes do not pair them, so `false` keeps a themes palette as it is |
 | `apca` | none | When set, an APCA Lc floor (absolute value, APCA-W3 0.0.98G-4g) for the default text and every syntax colour on the background, on top of the WCAG ratio |
 
 The defaults are WCAG 2.2 AAA for text (success criterion 1.4.6) and the WCAG 2.2 floor for
@@ -82,6 +85,8 @@ non-text contrast (success criterion 1.4.11).
 
 Every colour is a string in the form `#rrggbb`, in sRGB. Every colour is optional. A colour that is
 missing is derived (see [Derivation](#derivation)) and a colour that is present is never changed.
+The one exception is `surface_alt`, which is never derived: when it is missing it takes the value of
+`surface` wherever it is drawn and adds no pairs.
 
 ### Interface colours
 
@@ -92,6 +97,7 @@ These sit directly in the `[palette]` table.
 | `background` | The main background every other colour is measured on |
 | `foreground` | Default text |
 | `surface` | Panels, bars, sidebars and floating windows |
+| `surface_alt` | The second panel colour, for apps that draw two: activity and status bars, inactive tabs and list rows. Optional. Falls back to `surface` when missing |
 | `muted` | Secondary text such as line numbers and descriptions |
 | `border` | Borders and dividers |
 | `accent` | The one accent: the active tab, the current search match and buttons |
@@ -146,23 +152,60 @@ A checker measures every pair below and compares it with the floor named. A prof
 every pair passes. A writer of app config should draw only these pairs, so that a palette that
 passes is readable everywhere it is written.
 
+A pair on `surface_alt` is measured only when the profile sets it. When it is missing, those pairs
+are the pairs on `surface`, which are measured already.
+
 | Foreground | On | Floor |
 | --- | --- | --- |
-| `foreground` | `background`, `surface`, `line_highlight` and `selection_soft` | `text` |
-| `muted`, `link`, `error`, `warning`, `info` and `accent` | `background` and `surface` | `text` |
+| `foreground` | `background`, `surface`, `surface_alt`, `line_highlight` and `selection_soft` | `text` |
+| `muted`, `link`, `error`, `warning`, `info` and `accent` | `background`, `surface` and `surface_alt` | `text` |
 | `muted`, `link`, `error`, `warning`, `info` and `accent` | `line_highlight` | `overlay` |
 | `cursor` | `background` | `text` |
 | `cursor_text` | `cursor` | `text` |
 | `selection_foreground` | `selection_background` | `text` |
 | `accent_foreground` | `accent` | `text` |
-| `border` and `focus_ring` | `background` and `surface` | `non_text` |
+| `border` and `focus_ring` | `background`, `surface` and `surface_alt` | `non_text` |
 | `selection_background` | `background` | `non_text` |
-| every syntax colour | `background` and `surface` | `text` |
+| every syntax colour | `background`, `surface` and `surface_alt` | `text` |
 | every syntax colour | `line_highlight` and `selection_soft` | `overlay` |
 | each terminal slot not in `background_slots` | `background` | `terminal` (`terminal_dim` for slots in `dim`) |
 | `foreground` | each terminal slot in `background_slots` | `text` |
 | `line_highlight` and `selection_soft` | `background`, as an OKLab distance | `highlight_distance` |
 | `foreground` and every syntax colour | `background`, as APCA Lc, only when `apca` is set | `apca` |
+| each pair in [Paired colours](#paired-colours) | each other, as a tone difference | `tone_difference` |
+| each pair in [Paired colours](#paired-colours) | each other, as an OKLab distance under each of the three simulations | `colour_vision_distance` |
+
+### Paired colours
+
+Some roles are drawn next to each other and are told apart by colour, so they must also stay apart
+for a person with a colour vision deficiency. Each pair below is checked for a tone difference of at
+least `tone_difference` and an OKLab distance of at least `colour_vision_distance` under each of
+protanopia, deuteranopia and tritanopia. A simulation applies the Machado, Oliveira and Fernandes
+(2009) matrix at full severity to linear sRGB, clamps each channel to the gamut and rounds the
+result to 8 bit sRGB before it is measured.
+
+A pair marked *always* is checked whatever the font styles of its roles, because its colours are
+often red and green. Every other pair is checked only when both roles share a font style from
+[Syntax colours](#syntax-colours), since a difference in style already tells them apart.
+
+| Pair | Checked |
+| --- | --- |
+| `keyword` and `function`, `keyword` and `type`, `keyword` and `variable` | same style |
+| `control` and `keyword`, `control` and `variable`, `control` and `function` | same style |
+| `function` and `variable`, `function` and `type`, `function` and `property`, `function` and `string` | same style |
+| `type` and `variable`, `type` and `property` | same style |
+| `variable` and `property`, `variable` and `parameter` | same style |
+| `parameter` and `type`, `parameter` and `property` | same style |
+| `property` and `string`, `string` and `comment` | same style |
+| `number` and `variable`, `number` and `operator` | same style |
+| `comment` and `variable`, `invalid` and `variable` | same style |
+| `tag` and `attribute`, `attribute` and `string` | same style |
+| `string` and `number`, `string` and `regex`, `string` and `invalid` | always |
+| `added` and `removed`, `added` and `changed`, `removed` and `changed` | always |
+| `error` and `warning` | always, unless `check_error_warning` is `false` |
+
+The syntax pairs are the pairs the [Zacess themes](https://github.com/zacesshq/themes) check, with
+the same floors.
 
 ## Derivation
 
@@ -173,11 +216,19 @@ against another derived colour. A pair that fails because of a colour the profil
 comment colour that is too dim, is reported as that pair failing.
 
 `zprf` derives colours in OKLCH. Each role has a fixed hue. Lightness moves away from the
-background until the floor is met with a small margin. When an APCA floor is set the colour must
+background until the floor is met with a small margin on every surface the colour is drawn on,
+`surface_alt` included when it is set. When an APCA floor is set the colour must
 meet that as well. Chroma is reduced where needed to stay inside the sRGB gamut. Before handing a
 profile back it checks every pair a derived colour takes part in and stops on any failure the rule
 above puts on a derived colour, naming the colour and the floor. The exact colours it chooses are
 not part of this spec and may change between tool versions. The guarantee that they pass is.
+
+Every role solved this way starts at the same floor and so at the same tone, which paired colours
+must not share. `zprf` then places the derived syntax colours and the derived error and warning one
+at a time, each at the nearest lightness on its own hue where it meets its floors and stays apart
+from every role placed before it. Colours the profile sets are placed first and never move. When
+the band of lightness above the floors is too narrow for every pair, derivation fails and names the
+pair.
 
 ## Relation to the Zacess reading profile
 
@@ -216,3 +267,6 @@ size_pt = 18
 - Removing a field, renaming one, changing a default or changing a pair or a floor raises
   `spec_version`.
 - Readers must accept every spec version up to the newest one they support.
+- While spec version 1 is a draft, a pair or a floor may still be added to it, as the paired colours
+  were. A profile that passed before such a change can then fail `check` and name the new pair.
+  Marking version 1 final freezes its pairs and floors under the rules above.

@@ -2,12 +2,13 @@ use std::io::Write;
 use std::path::{Path, PathBuf};
 use std::process::ExitCode;
 
-use anyhow::{Context, Result, bail};
+use anyhow::{Context, Result};
 use clap::{Parser, Subcommand};
 
 use zacess_profile::check::Kind;
 use zacess_profile::profile::Profile;
-use zacess_profile::{check, derive, osc, render};
+use zacess_profile::watch::{self, Follow};
+use zacess_profile::{check, checked, derive, osc, render};
 
 /// One accessibility profile for every app.
 ///
@@ -66,8 +67,65 @@ enum Command {
         #[arg(long)]
         tmux: bool,
     },
+    /// Re-check and re-render a profile each time it changes, following the system's light or
+    /// dark appearance when the profile has both variants
+    ///
+    /// A profile named name-dark.toml or name-light.toml is paired with the other one in the same
+    /// folder. Name another variant with --variant. Files are written only inside --out, under the
+    /// id without its -dark or -light ending, so an app can point at one file for both. It runs
+    /// until Ctrl+C.
+    Watch {
+        profile: PathBuf,
+        /// A target from list-targets or "all"
+        #[arg(short, long)]
+        target: String,
+        /// The directory to write into; each target gets its own folder inside it
+        #[arg(short, long)]
+        out: PathBuf,
+        /// The other variant, when it is not found by name
+        #[arg(long)]
+        variant: Option<PathBuf>,
+        /// Which variant to use: follow the system or always use the dark or the light one
+        #[arg(long, value_enum, default_value_t = AppearanceArg::System)]
+        appearance: AppearanceArg,
+        /// How often to look for a change, in milliseconds
+        #[arg(long, default_value_t = 500, value_parser = clap::value_parser!(u64).range(50..=60_000))]
+        interval_ms: u64,
+        #[arg(long, hide = true)]
+        appearance_from: Option<PathBuf>,
+        #[arg(long, hide = true)]
+        stop_after_ms: Option<u64>,
+    },
+    /// Print the system accessibility settings a profile maps to, without changing any
+    ///
+    /// The lines are `defaults write` and `defaults delete` commands on macOS, `gsettings set` on GNOME and `reg add`
+    /// values with their Settings page on Windows. zprf never runs them: this is a preview, and
+    /// --print is required so that is never in doubt.
+    Os {
+        profile: PathBuf,
+        /// Print the settings; nothing is ever applied
+        #[arg(long, required = true)]
+        print: bool,
+        /// The platform to print for, when it is not the one this runs on
+        #[arg(long, value_enum)]
+        platform: Option<PlatformArg>,
+    },
     /// List the targets render can write
     ListTargets,
+}
+
+#[derive(Clone, Copy, clap::ValueEnum)]
+enum PlatformArg {
+    Macos,
+    Gnome,
+    Windows,
+}
+
+#[derive(Clone, Copy, clap::ValueEnum)]
+enum AppearanceArg {
+    System,
+    Dark,
+    Light,
 }
 
 fn main() -> ExitCode {
@@ -100,6 +158,48 @@ fn run(command: Command) -> Result<ExitCode> {
             escaped,
             tmux,
         } => cmd_apply(&profile, escaped, tmux),
+        Command::Watch {
+            profile,
+            target,
+            out,
+            variant,
+            appearance,
+            interval_ms,
+            appearance_from,
+            stop_after_ms,
+        } => {
+            use zacess_profile::profile::Appearance;
+            watch::run(&watch::Options {
+                profile,
+                variant,
+                targets: targets(&target)?,
+                out,
+                follow: match appearance {
+                    AppearanceArg::System => Follow::System,
+                    AppearanceArg::Dark => Follow::Fixed(Appearance::Dark),
+                    AppearanceArg::Light => Follow::Fixed(Appearance::Light),
+                },
+                interval: std::time::Duration::from_millis(interval_ms),
+                appearance_from,
+                stop_after: stop_after_ms.map(std::time::Duration::from_millis),
+            })?;
+            Ok(ExitCode::SUCCESS)
+        }
+        Command::Os {
+            profile,
+            print: _,
+            platform,
+        } => {
+            use zacess_profile::os::{Platform, preview};
+            let platform = match platform {
+                Some(PlatformArg::Macos) => Platform::Macos,
+                Some(PlatformArg::Gnome) => Platform::Gnome,
+                Some(PlatformArg::Windows) => Platform::Windows,
+                None => Platform::current(),
+            };
+            print!("{}", preview(&checked(&profile)?, platform));
+            Ok(ExitCode::SUCCESS)
+        }
         Command::ListTargets => {
             let width = render::TARGETS
                 .iter()
@@ -168,13 +268,16 @@ fn check_one(path: &Path, verbose: bool, no_derive: bool) -> Result<bool> {
         profile.name
     );
     println!(
-        "     {} pairs against text {}:1, non-text {}:1, overlay {}:1, terminal {}:1 and dim terminal {}:1{}",
+        "     {} pairs against text {}:1, non-text {}:1, overlay {}:1, terminal {}:1 and dim terminal {}:1, \
+         with paired colours {} apart in tone and {} under colour vision deficiencies{}",
         report.pairs.len(),
         c.text,
         c.non_text,
         c.overlay,
         c.terminal,
         c.terminal_dim,
+        c.tone_difference,
+        c.colour_vision_distance,
         c.apca
             .map(|lc| format!(" plus APCA Lc {lc}"))
             .unwrap_or_default()
@@ -200,31 +303,20 @@ fn check_one(path: &Path, verbose: bool, no_derive: bool) -> Result<bool> {
             let tag = match (pair.passes(), pair.kind) {
                 (false, _) => "FAIL",
                 (true, Kind::Distance) => "dist",
+                (true, Kind::Vision(_)) => "cvd ",
+                (true, Kind::Tone) => "tone",
                 (true, Kind::Apca) => "apca",
                 (true, Kind::Ratio) => "ok  ",
             };
-            println!("     {tag} {pair} (floor {})", pair.required_shown());
+            // a failing pair already names its floor, so only a passing one has it added
+            if pair.passes() {
+                println!("     {tag} {pair} (floor {})", pair.required_shown());
+            } else {
+                println!("     {tag} {pair}");
+            }
         }
     }
     Ok(ok)
-}
-
-/// Loads, completes and checks a profile, refusing one that breaks its own floors.
-fn checked(path: &Path) -> Result<Profile> {
-    let profile = Profile::load(path)?;
-    let derived = derive::derive(&profile)
-        .with_context(|| format!("{} cannot be completed", path.display()))?;
-    let report = check::check(&derived.profile)?;
-    let fails = report.failures();
-    if !fails.is_empty() {
-        let lines: Vec<String> = fails.iter().map(|p| format!("  {p}")).collect();
-        bail!(
-            "{} breaks its own needs, so nothing was written:\n{}",
-            path.display(),
-            lines.join("\n")
-        );
-    }
-    Ok(derived.profile)
 }
 
 fn cmd_derive(path: &Path, out: Option<&Path>) -> Result<ExitCode> {
@@ -294,15 +386,18 @@ fn annotate(toml: &str, filled: &[String]) -> String {
     out
 }
 
-fn cmd_render(path: &Path, target: &str, out: &Path) -> Result<ExitCode> {
-    let profile = checked(path)?;
-    let targets: Vec<&render::Target> = if target == "all" {
+fn targets(name: &str) -> Result<Vec<&'static render::Target>> {
+    Ok(if name == "all" {
         render::TARGETS.iter().collect()
     } else {
-        vec![render::target(target)?]
-    };
-    for t in targets {
-        let written = render::write(&profile, t, out)?;
+        vec![render::target(name)?]
+    })
+}
+
+fn cmd_render(path: &Path, target: &str, out: &Path) -> Result<ExitCode> {
+    let profile = checked(path)?;
+    for t in targets(target)? {
+        let written = render::write_guarded(&profile, t, out, &[path.to_path_buf()])?;
         println!("wrote {}", written.display());
     }
     Ok(ExitCode::SUCCESS)

@@ -1,7 +1,10 @@
-//! Colour maths: sRGB hex parsing, OKLab and OKLCH, WCAG 2.2 contrast and APCA.
+//! Colour maths: sRGB hex parsing, OKLab and OKLCH, WCAG 2.2 contrast, APCA and simulated colour
+//! vision deficiencies.
 //!
 //! OKLab follows Björn Ottosson's published matrices. The WCAG figures follow the relative
-//! luminance definition in WCAG 2.2. APCA follows the APCA-W3 0.0.98G-4g constants.
+//! luminance definition in WCAG 2.2. APCA follows the APCA-W3 0.0.98G-4g constants. The colour
+//! vision simulation uses the Machado, Oliveira and Fernandes (2009) matrices at full severity,
+//! the same ones the Zacess themes check with.
 
 use std::fmt;
 use std::str::FromStr;
@@ -92,6 +95,84 @@ impl Rgb {
     pub fn to_oklch(self) -> Oklch {
         self.to_oklab().to_oklch()
     }
+
+    /// The nearest 8 bit colour to a linear RGB triple, clamping each channel into the gamut.
+    pub fn from_linear(rgb: [f64; 3]) -> Rgb {
+        let to_byte = |c: f64| (linear_to_srgb(c.clamp(0.0, 1.0)) * 255.0).round() as u8;
+        Rgb::new(to_byte(rgb[0]), to_byte(rgb[1]), to_byte(rgb[2]))
+    }
+
+    /// The cube root of relative luminance: the OKLab lightness of the grey with the same
+    /// luminance, which is all a viewer with no colour vision has to go on.
+    pub fn tone(self) -> f64 {
+        self.relative_luminance().cbrt()
+    }
+}
+
+/// A colour vision deficiency to simulate. Each one is the full form, the hardest case of its kind.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum Deficiency {
+    Protanopia,
+    Deuteranopia,
+    Tritanopia,
+}
+
+impl Deficiency {
+    pub const ALL: [Deficiency; 3] = [
+        Deficiency::Protanopia,
+        Deficiency::Deuteranopia,
+        Deficiency::Tritanopia,
+    ];
+
+    pub fn name(self) -> &'static str {
+        match self {
+            Deficiency::Protanopia => "protanopia",
+            Deficiency::Deuteranopia => "deuteranopia",
+            Deficiency::Tritanopia => "tritanopia",
+        }
+    }
+
+    /// Machado, Oliveira and Fernandes (2009), severity 1.0, applied to linear RGB.
+    fn matrix(self) -> [[f64; 3]; 3] {
+        match self {
+            Deficiency::Protanopia => [
+                [0.152_286, 1.052_583, -0.204_868],
+                [0.114_503, 0.786_281, 0.099_216],
+                [-0.003_882, -0.048_116, 1.051_998],
+            ],
+            Deficiency::Deuteranopia => [
+                [0.367_322, 0.860_646, -0.227_968],
+                [0.280_085, 0.672_501, 0.047_413],
+                [-0.011_82, 0.042_94, 0.968_881],
+            ],
+            Deficiency::Tritanopia => [
+                [1.255_528, -0.076_749, -0.178_779],
+                [-0.078_411, 0.930_809, 0.147_602],
+                [0.004_733, 0.691_367, 0.303_9],
+            ],
+        }
+    }
+}
+
+impl fmt::Display for Deficiency {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        f.write_str(self.name())
+    }
+}
+
+/// How a colour looks to a person with the given deficiency, rounded to 8 bits as the Zacess themes
+/// do, so a distance measured here is the distance measured there.
+pub fn simulate(colour: Rgb, deficiency: Deficiency) -> Rgb {
+    let rgb = colour.linear();
+    let m = deficiency.matrix();
+    Rgb::from_linear(m.map(|row| row[0] * rgb[0] + row[1] * rgb[1] + row[2] * rgb[2]))
+}
+
+/// The OKLab distance between two colours as a person with the given deficiency sees them.
+pub fn simulated_distance(a: Rgb, b: Rgb, deficiency: Deficiency) -> f64 {
+    simulate(a, deficiency)
+        .to_oklab()
+        .distance(simulate(b, deficiency).to_oklab())
 }
 
 impl FromStr for Rgb {
@@ -220,9 +301,7 @@ impl Oklch {
             }
             colour.c = lo;
         }
-        let [r, g, b] = colour.to_oklab().to_linear();
-        let to_byte = |c: f64| (linear_to_srgb(c.clamp(0.0, 1.0)) * 255.0).round() as u8;
-        Rgb::new(to_byte(r), to_byte(g), to_byte(b))
+        Rgb::from_linear(colour.to_oklab().to_linear())
     }
 }
 
@@ -358,5 +437,30 @@ mod tests {
         // #888888 text on white, Lc 63.06 in the reference implementation
         assert!((apca_lc(rgb("#888888"), Rgb::WHITE) - 63.06).abs() < 0.05);
         assert_eq!(apca_lc(rgb("#777777"), rgb("#777777")), 0.0);
+    }
+
+    #[test]
+    fn simulation_matches_the_published_matrices() {
+        // greys have equal channels and every Machado row sums to one, so they are unchanged
+        for hex in ["#000000", "#ffffff", "#777777"] {
+            for d in Deficiency::ALL {
+                assert_eq!(simulate(rgb(hex), d), rgb(hex), "{hex} {d}");
+            }
+        }
+        // pure red under protanopia keeps little more than its luminance, a dark olive
+        let red = simulate(rgb("#ff0000"), Deficiency::Protanopia);
+        assert!(red.r < 0x80 && red.g < 0x80 && red.b < 0x10, "{red}");
+        // red and green that differ only in hue collapse under deuteranopia but not in normal vision
+        let (a, b) = (rgb("#b35a00"), rgb("#5a7a00"));
+        assert!(a.to_oklab().distance(b.to_oklab()) > 0.1);
+        assert!(simulated_distance(a, b, Deficiency::Deuteranopia) < 0.06);
+    }
+
+    #[test]
+    fn tone_is_the_cube_root_of_luminance() {
+        assert_eq!(Rgb::BLACK.tone(), 0.0);
+        assert!((Rgb::WHITE.tone() - 1.0).abs() < 1e-12);
+        let grey = rgb("#777777");
+        assert!((grey.tone() - grey.to_oklab().l).abs() < 1e-3);
     }
 }

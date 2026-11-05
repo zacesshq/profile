@@ -7,6 +7,7 @@
 
 use anyhow::{Result, bail};
 
+use crate::check::Kind;
 use crate::colour::{Oklch, Rgb, apca_lc, contrast_ratio};
 use crate::profile::{Appearance, Palette, Profile, Syntax};
 
@@ -91,9 +92,26 @@ pub fn derive(profile: &Profile) -> Result<Derived> {
         .unwrap_or_else(|| shade(background, 0.1, &[(foreground, needs.text)]));
     fill(p, "line_highlight", line, &mut filled);
 
-    let surfaces = [background, surface];
-    let text =
-        |role: &str, hue: f64, chroma: f64, on: &[Rgb]| solve(role, hue, chroma, on, needs.text);
+    // a second panel colour is never derived: left out, the panels share the surface. When it is
+    // set, every colour drawn on panels is solved against it as well, as check measures it there
+    let surfaces: Vec<Rgb> = [Some(background), Some(surface), p.surface_alt]
+        .into_iter()
+        .flatten()
+        .collect();
+    // interface text is also drawn over the current line, which may be a colour the person set,
+    // so it is solved against that band at the overlay floor as check measures it
+    let text = |role: &str, hue: f64, chroma: f64, on: &[Rgb]| {
+        solve_over(
+            role,
+            hue,
+            chroma,
+            on,
+            needs.text,
+            None,
+            &[line],
+            needs.overlay,
+        )
+    };
 
     if p.muted.is_none() {
         fill(p, "muted", text("muted", 0.0, 0.0, &surfaces)?, &mut filled);
@@ -172,8 +190,12 @@ pub fn derive(profile: &Profile) -> Result<Derived> {
         }
     }
 
-    // syntax colours are solved against every surface they are drawn on at the text floor
-    let syntax_on = [background, surface];
+    // syntax colours are solved against every surface they are drawn on at the text floor and over
+    // both background-only highlights at the overlay floor
+    let syntax_over = [
+        p.line_highlight.expect("filled above"),
+        p.selection_soft.expect("filled above"),
+    ];
     let mut syntax = p.syntax.clone();
     for &role in Syntax::ROLES {
         if syntax.get(role).is_some() {
@@ -183,9 +205,9 @@ pub fn derive(profile: &Profile) -> Result<Derived> {
             "variable" | "operator" => foreground,
             "tag" => match syntax.keyword {
                 Some(k) => k,
-                None => syntax_hue(role, &syntax_on, needs.text, needs.apca)?,
+                None => syntax_hue(role, &surfaces, &syntax_over, &needs)?,
             },
-            _ => syntax_hue(role, &syntax_on, needs.text, needs.apca)?,
+            _ => syntax_hue(role, &surfaces, &syntax_over, &needs)?,
         };
         *syntax.slot(role).expect("role from ROLES") = Some(colour);
         filled.push(format!("syntax.{role}"));
@@ -201,11 +223,175 @@ pub fn derive(profile: &Profile) -> Result<Derived> {
         filled.push("terminal.ansi".to_string());
     }
 
+    keep_pairs_apart(&mut out, &filled)?;
     refuse_failing_derivations(&out, &filled)?;
     Ok(Derived {
         profile: out,
         filled,
     })
+}
+
+/// Spreads derived colours that sit too close to a paired role. Each derived colour was solved by
+/// lightness alone, so every role at the same floor shares one tone and neighbours can merge under
+/// a colour vision deficiency. The derived roles are placed one at a time, in spec order, each at
+/// the nearest lightness on its own hue where it stays apart from every role already placed and
+/// still meets its contrast floors. Colours the person set are placed from the start and never move.
+fn keep_pairs_apart(profile: &mut Profile, filled: &[String]) -> Result<()> {
+    let movable = |role: &str| movable(role, filled);
+    let roles: Vec<String> = Syntax::ROLES
+        .iter()
+        .map(|r| format!("syntax.{r}"))
+        .chain(["error".to_string(), "warning".to_string()])
+        .filter(|r| movable(r))
+        .collect();
+    // placing one role at a time can paint itself into a corner when the band of tone above the
+    // floor is narrow, so a few orders are tried and the first that leaves no pair failing wins;
+    // the spec order is first so ordinary profiles always get the same colours
+    let mut most_constrained = roles.clone();
+    most_constrained.sort_by_key(|r| {
+        std::cmp::Reverse(
+            crate::check::DISTINCT
+                .iter()
+                .filter(|(a, b, always)| {
+                    (a == r || b == r) && crate::check::distinct_applies(a, b, *always)
+                })
+                .count(),
+        )
+    });
+    let mut reversed = roles.clone();
+    reversed.reverse();
+    let start = profile.clone();
+    let mut best: Option<(usize, Profile)> = None;
+    let keyword_before = start.palette.syntax.keyword;
+    for order in [roles.clone(), most_constrained, reversed] {
+        let mut trial = start.clone();
+        spread(&mut trial, &order)?;
+        tag_follows_keyword(&mut trial, filled, keyword_before);
+        let failing = crate::check::check(&trial)?
+            .failures()
+            .iter()
+            .filter(|p| matches!(p.kind, Kind::Tone | Kind::Vision(_)))
+            .count();
+        if failing == 0 {
+            *profile = trial;
+            return Ok(());
+        }
+        if best.as_ref().is_none_or(|(n, _)| failing < *n) {
+            best = Some((failing, trial));
+        }
+    }
+    // no order clears every pair; the closest is kept and refuse_failing_derivations names the rest
+    if let Some((_, trial)) = best {
+        *profile = trial;
+    }
+    Ok(())
+}
+
+/// Whether `derive` chose this colour by hue and may move it to keep a pair apart.
+fn movable(role: &str, filled: &[String]) -> bool {
+    filled.iter().any(|f| f == role)
+        && match role.strip_prefix("syntax.") {
+            Some(token) => SYNTAX_HUES.iter().any(|(r, _)| *r == token),
+            None => matches!(role, "error" | "warning"),
+        }
+}
+
+/// Places each role of `order` in turn at the nearest lightness that keeps it apart from every
+/// role placed before it as well as from every role outside `order`.
+fn spread(profile: &mut Profile, order: &[String]) -> Result<()> {
+    let mut placed: Vec<String> = Vec::new();
+    for role in order {
+        let partner_placed =
+            |other: &str| !order.iter().any(|r| r == other) || placed.iter().any(|r| r == other);
+        if let Some(colour) = nearest_passing(profile, role, &partner_placed)? {
+            set_role(&mut profile.palette, role, colour);
+        }
+        placed.push(role.clone());
+    }
+    Ok(())
+}
+
+/// A derived tag is a copy of the keyword colour, so it follows the keyword wherever it moved.
+fn tag_follows_keyword(profile: &mut Profile, filled: &[String], keyword_before: Option<Rgb>) {
+    let p = &mut profile.palette.syntax;
+    if filled.iter().any(|f| f == "syntax.tag")
+        && p.tag == keyword_before
+        && p.keyword != keyword_before
+    {
+        p.tag = p.keyword;
+    }
+}
+
+/// The colour on the same OKLCH hue and chroma as `role`'s current colour, nearest in lightness
+/// (the current colour first), at which every pair `role` takes part in passes, counting only the
+/// paired roles `counts` accepts. `None` when no lightness does. At equal distance the step away
+/// from the background wins, so a tie is settled with more contrast rather than less.
+fn nearest_passing(
+    profile: &Profile,
+    role: &str,
+    counts: &dyn Fn(&str) -> bool,
+) -> Result<Option<Rgb>> {
+    let current = role_colour(&profile.palette, role).expect("a complete palette");
+    let bold = role
+        .strip_prefix("syntax.")
+        .is_some_and(|t| crate::profile::style(t).contains(&"bold"));
+    let base = current.to_oklch();
+    let background = profile.palette.background.expect("a complete palette");
+    let away = if is_dark(background) { 1.0 } else { -1.0 };
+    let mut trial = profile.clone();
+    let mut passes = |candidate: Rgb| -> Result<bool> {
+        set_role(&mut trial.palette, role, candidate);
+        let report = crate::check::check(&trial)?;
+        Ok(report.failures().iter().all(|p| {
+            let other = if p.fg_role == role {
+                &p.bg_role
+            } else if p.bg_role == role {
+                &p.fg_role
+            } else {
+                return true;
+            };
+            // a failing contrast pair always rules the colour out; a failing distinct pair only
+            // once its partner is placed
+            matches!(p.kind, Kind::Tone | Kind::Vision(_)) && !counts(other)
+        }))
+    };
+    if passes(current)? {
+        return Ok(Some(current));
+    }
+    for step in 1..=400 {
+        for sign in [away, -away] {
+            let l = base.l + sign * 0.0025 * f64::from(step);
+            if !(0.0..=1.0).contains(&l) {
+                continue;
+            }
+            let candidate = Oklch::new(l, base.c, base.h).to_rgb();
+            // near black or white the gamut leaves too little chroma for the hue to show; a
+            // grey there would read as the text colour rather than as its role
+            // a bold role is already told from regular text by its weight, so it may go grey
+            if base.c > 0.03 && candidate.to_oklch().c < 0.02 && !bold {
+                continue;
+            }
+            if candidate != current && passes(candidate)? {
+                return Ok(Some(candidate));
+            }
+        }
+    }
+    Ok(None)
+}
+
+fn role_colour(p: &Palette, role: &str) -> Option<Rgb> {
+    match role.strip_prefix("syntax.") {
+        Some(token) => p.syntax.get(token),
+        None => p.get(role),
+    }
+}
+
+fn set_role(p: &mut Palette, role: &str, colour: Rgb) {
+    let slot = match role.strip_prefix("syntax.") {
+        Some(token) => p.syntax.slot(token),
+        None => p.slot(role),
+    };
+    *slot.expect("role names come from the check") = Some(colour);
 }
 
 /// The base name a pair uses for a role, so `terminal.ansi[3]` matches the filled entry
@@ -225,9 +411,21 @@ fn base_role(role: &str) -> &str {
 fn refuse_failing_derivations(profile: &Profile, filled: &[String]) -> Result<()> {
     let report = crate::check::check(profile)?;
     let derived = |role: &str| filled.iter().any(|f| f == base_role(role));
+    let paired = |pair: &crate::check::Pair| matches!(pair.kind, Kind::Tone | Kind::Vision(_));
+    // a paired colour the tool placed was free to move away from its partner, so a pair still
+    // failing is the tool's, whoever set the other side
+    let mut apart: Vec<String> = Vec::new();
+    for pair in report.failures().into_iter().filter(|p| paired(p)) {
+        let (fg, bg) = (pair.fg_role.as_str(), pair.bg_role.as_str());
+        let name = format!("{fg} and {bg}");
+        if (movable(fg, filled) || movable(bg, filled)) && !apart.contains(&name) {
+            apart.push(name);
+        }
+    }
     let blamed: Vec<String> = report
         .failures()
         .into_iter()
+        .filter(|pair| !paired(pair))
         .filter(|pair| {
             let (fg, bg) = (pair.fg_role.as_str(), pair.bg_role.as_str());
             (derived(fg) && (bg == "background" || derived(bg)))
@@ -235,39 +433,65 @@ fn refuse_failing_derivations(profile: &Profile, filled: &[String]) -> Result<()
         })
         .map(|pair| format!("  {pair}"))
         .collect();
-    if blamed.is_empty() {
+    if blamed.is_empty() && apart.is_empty() {
         return Ok(());
+    }
+    let mut message = String::new();
+    if !blamed.is_empty() {
+        message.push_str(&format!(
+            "no colour could be derived that meets these floors:\n{}",
+            blamed.join("\n")
+        ));
+    }
+    if !apart.is_empty() {
+        // the colours tried along the way were never chosen by anyone, so the roles are named
+        // against the person's own background and floors instead
+        let c = &profile.needs.contrast;
+        let background = profile.palette.background.expect("a complete palette");
+        if !message.is_empty() {
+            message.push('\n');
+        }
+        message.push_str(&format!(
+            "these paired roles cannot be kept apart on the background {background} at a text floor \
+             of {}:1: {}.\nThe band of lightness above the text floor is too narrow to give each its \
+             own tone {} apart and keep them {} apart under colour vision deficiencies. Set these \
+             colours by hand, choose a {} background or lower needs.contrast.tone_difference or \
+             needs.contrast.colour_vision_distance",
+            c.text,
+            apart.join(", "),
+            c.tone_difference,
+            c.colour_vision_distance,
+            if is_dark(background) { "darker" } else { "lighter" }
+        ));
     }
     // a colour the person set that already misses its floor is often why nothing could be found,
     // so it is named alongside rather than left for a later check
     let own: Vec<String> = report
         .failures()
         .into_iter()
+        .filter(|pair| !paired(pair))
         .filter(|pair| !derived(&pair.fg_role) && !derived(&pair.bg_role))
         .map(|pair| format!("  {pair}"))
         .collect();
-    let mut cause = if own.is_empty() {
-        String::new()
-    } else {
-        format!(
+    if !own.is_empty() {
+        message.push_str(&format!(
             "\nThese colours you set already miss their floors:\n{}",
             own.join("\n")
-        )
-    };
+        ));
+    }
     if blamed
         .iter()
         .any(|line| line.contains("highlight_distance"))
     {
-        cause.push_str(
+        message.push_str(
             "\nA highlight can only move away from the background while the text on it keeps its \
              floor, so the foreground needs more contrast with the background than the floor alone",
         );
     }
-    bail!(
-        "no colour could be derived that meets these floors:\n{}{cause}\nSet the colours by hand \
-         or change the floors in [needs.contrast]",
-        blamed.join("\n")
-    )
+    if !blamed.is_empty() {
+        message.push_str("\nSet the colours by hand or change the floors in [needs.contrast]");
+    }
+    bail!("{message}")
 }
 
 fn fill(p: &mut Palette, role: &str, colour: Rgb, filled: &mut Vec<String>) {
@@ -336,12 +560,26 @@ fn soft_highlight(background: Rgb, foreground: Rgb, floor: f64, distance: f64) -
     best
 }
 
-fn syntax_hue(role: &str, on: &[Rgb], floor: f64, apca: Option<f64>) -> Result<Rgb> {
+fn syntax_hue(
+    role: &str,
+    on: &[Rgb],
+    over: &[Rgb],
+    needs: &crate::profile::ContrastNeeds,
+) -> Result<Rgb> {
     let hue = SYNTAX_HUES
         .iter()
         .find(|(r, _)| *r == role)
         .map_or(0.0, |&(_, h)| h);
-    solve_text(&format!("syntax.{role}"), hue, 0.16, on, floor, apca)
+    solve_over(
+        &format!("syntax.{role}"),
+        hue,
+        0.16,
+        on,
+        needs.text,
+        needs.apca,
+        over,
+        needs.overlay,
+    )
 }
 
 /// The colour of the given hue and chroma nearest in lightness to the first surface that still
@@ -361,11 +599,32 @@ pub fn solve_text(
     floor: f64,
     apca: Option<f64>,
 ) -> Result<Rgb> {
+    solve_over(role, hue, chroma, on, floor, apca, &[], 0.0)
+}
+
+/// As `solve_text`, also meeting `over_floor` on each band in `over`, such as a current line.
+#[allow(clippy::too_many_arguments)]
+pub fn solve_over(
+    role: &str,
+    hue: f64,
+    chroma: f64,
+    on: &[Rgb],
+    floor: f64,
+    apca: Option<f64>,
+    over: &[Rgb],
+    over_floor: f64,
+) -> Result<Rgb> {
     let anchor = on[0];
     let dark = is_dark(anchor);
     let target = floor + MARGIN;
     let apca_ok = |c: Rgb, lc: f64| apca.is_none_or(|need| apca_lc(c, anchor).abs() >= need + lc);
-    let meets = |c: Rgb| on.iter().all(|&s| contrast_ratio(c, s) >= target) && apca_ok(c, 1.0);
+    let over_ok = |c: Rgb, margin: f64| {
+        over.iter()
+            .all(|&b| contrast_ratio(c, b) >= over_floor + margin)
+    };
+    let meets = |c: Rgb| {
+        on.iter().all(|&s| contrast_ratio(c, s) >= target) && apca_ok(c, 1.0) && over_ok(c, MARGIN)
+    };
     let at = |l: f64| Oklch::new(l, chroma, hue).to_rgb();
     let start = anchor.to_oklch().l;
     let end = if dark { 1.0 } else { 0.0 };
@@ -390,8 +649,21 @@ pub fn solve_text(
         }
     }
     let extreme = if dark { Rgb::WHITE } else { Rgb::BLACK };
-    if on.iter().all(|&s| contrast_ratio(extreme, s) >= floor) && apca_ok(extreme, 0.0) {
+    let on_ok = on.iter().all(|&s| contrast_ratio(extreme, s) >= floor);
+    if on_ok && apca_ok(extreme, 0.0) && over_ok(extreme, 0.0) {
         return Ok(extreme);
+    }
+    if on_ok && !over_ok(extreme, 0.0) {
+        let band = over
+            .iter()
+            .map(|b| b.hex())
+            .collect::<Vec<_>>()
+            .join(" and ");
+        bail!(
+            "cannot derive {role}: needs.contrast.overlay asks for {over_floor}:1 over {band} but \
+             even {extreme} misses it there. Move the current line or the soft selection further \
+             from the text or lower the overlay floor"
+        );
     }
     if let Some(need) = apca
         && on.iter().all(|&s| contrast_ratio(extreme, s) >= floor)
@@ -490,6 +762,23 @@ mod tests {
     }
 
     #[test]
+    fn derived_colours_are_solved_on_surface_alt_too() {
+        let plain = derive(&minimal("[palette]\nbackground = \"#ffffff\"")).unwrap();
+        let d = derive(&minimal(
+            "[palette]\nbackground = \"#ffffff\"\nsurface_alt = \"#d8d8d8\"",
+        ))
+        .unwrap();
+        assert!(!d.filled.contains(&"surface_alt".to_string()));
+        let report = check(&d.profile).unwrap();
+        assert!(report.failures().is_empty(), "{:?}", report.failures());
+        // without the second panel colour the derived muted text would sit too light for it
+        let alt: Rgb = "#d8d8d8".parse().unwrap();
+        let muted = |p: &Profile| p.palette.muted.unwrap();
+        assert!(contrast_ratio(muted(&plain.profile), alt) < 7.0);
+        assert!(contrast_ratio(muted(&d.profile), alt) >= 7.0);
+    }
+
+    #[test]
     fn set_colours_are_never_changed() {
         let d = derive(&minimal(
             "[palette]\nbackground = \"#101010\"\naccent = \"#ffd400\"",
@@ -552,5 +841,81 @@ mod tests {
                 .to_string()
                 .contains("appearance is dark")
         );
+    }
+
+    #[test]
+    fn derived_pairs_are_spread_apart() {
+        // every derived role starts at the same floor and so the same tone; the spread keeps each
+        // paired role apart in tone and under every simulated deficiency
+        for bg in ["#000000", "#ffffff", "#1e1e2e", "#fdf6e3"] {
+            let d = derive(&minimal(&format!("[palette]\nbackground = \"{bg}\""))).unwrap();
+            let report = check(&d.profile).unwrap();
+            let pairs = report
+                .pairs
+                .iter()
+                .filter(|p| matches!(p.kind, Kind::Tone | Kind::Vision(_)))
+                .count();
+            assert!(pairs >= 60, "{bg}: {pairs}");
+            assert!(
+                report.failures().is_empty(),
+                "{bg}: {:?}",
+                report.failures()
+            );
+        }
+    }
+
+    #[test]
+    fn a_derived_colour_moves_but_a_set_one_does_not() {
+        let p = minimal("[palette]\nbackground = \"#ffffff\"\nerror = \"#810005\"");
+        let d = derive(&p).unwrap();
+        assert_eq!(d.profile.palette.error, Some("#810005".parse().unwrap()));
+        let warning = d.profile.palette.warning.unwrap();
+        let error = d.profile.palette.error.unwrap();
+        assert!(
+            (warning.tone() - error.tone()).abs() >= 0.05,
+            "{warning} {error}"
+        );
+        assert!(check(&d.profile).unwrap().failures().is_empty());
+    }
+
+    #[test]
+    fn no_room_to_spread_fails_by_name() {
+        // an APCA floor of Lc 90 on black leaves too narrow a band of tone for three paired roles
+        let p = minimal("[needs.contrast]\napca = 90");
+        let err = derive(&p).unwrap_err().to_string();
+        assert!(
+            err.contains("these paired roles cannot be kept apart on the background #000000"),
+            "{err}"
+        );
+        assert!(err.contains("needs.contrast.tone_difference"), "{err}");
+        // no colour tried along the way is shown as if someone had chosen it
+        assert!(!err.contains(" in tone:"), "{err}");
+    }
+
+    #[test]
+    fn a_derived_colour_that_cannot_move_apart_is_refused() {
+        // the reviewed repro: a set error and a derived warning with no lightness far enough away
+        let p = minimal(
+            "[needs.contrast]\ntone_difference = 0.4\n[palette]\nbackground = \"#ffffff\"\n\
+             error = \"#810005\"",
+        );
+        let err = derive(&p).unwrap_err().to_string();
+        assert!(err.contains("error and warning"), "{err}");
+        assert!(err.contains("on the background #ffffff"), "{err}");
+        assert!(err.contains("own tone 0.4 apart"), "{err}");
+    }
+
+    #[test]
+    fn derived_colours_meet_the_overlay_floor_on_a_set_current_line() {
+        // the reviewed repro: derived colours landed at 4.3:1 over a current line set by hand
+        let p = minimal("[palette]\nbackground = \"#000000\"\nline_highlight = \"#333333\"");
+        let d = derive(&p).unwrap();
+        let fails: Vec<String> = check(&d.profile)
+            .unwrap()
+            .failures()
+            .iter()
+            .map(|f| f.to_string())
+            .collect();
+        assert!(fails.is_empty(), "{fails:?}");
     }
 }

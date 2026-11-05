@@ -25,6 +25,13 @@ text = "{{ c.selection_foreground }}"
 {{ name }} = "{{ ansi[loop.index0 + 8] }}"
 {% endfor %}
 
+{% if needs.hide_decoration %}
+# a solid background, so text is never drawn over whatever sits behind the window
+[window]
+opacity = 1.0
+blur = false
+
+{% endif %}
 {% if needs.block_cursor or needs.reduce_motion %}
 [cursor.style]
 {% if needs.block_cursor %}

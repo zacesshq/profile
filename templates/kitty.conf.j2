@@ -14,7 +14,7 @@ inactive_border_color {{ c.border }}
 active_tab_foreground {{ c.accent_foreground }}
 active_tab_background {{ c.accent }}
 inactive_tab_foreground {{ c.muted }}
-inactive_tab_background {{ c.surface }}
+inactive_tab_background {{ c.surface_alt }}
 tab_bar_background {{ c.surface }}
 
 {% for colour in ansi %}
@@ -41,4 +41,18 @@ font_size {{ needs.font_size_pt }}
 {% endif %}
 {% if needs.cell_height_percent %}
 modify_font cell_height {{ needs.cell_height_percent }}%
+{% endif %}
+{% if needs.focus_ring_width_px %}
+# the active window's border is kitty's focus ring
+window_border_width {{ needs.focus_ring_width_px }}px
+{% endif %}
+{% if needs.single_column %}
+# windows stack top to bottom or one fills the tab, so nothing sits side by side
+enabled_layouts vertical,stack
+{% endif %}
+{% if needs.hide_decoration %}
+# a solid background, so text is never drawn over an image or whatever sits behind the window
+background_opacity 1.0
+background_blur 0
+background_image none
 {% endif %}

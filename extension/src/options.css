@@ -1,0 +1,41 @@
+/* the page follows the system's light or dark setting with the highest contrast pair in each,
+   one accent for focus and nothing that moves */
+:root {
+  color-scheme: light dark;
+  --bg: #ffffff;
+  --fg: #000000;
+  --muted: #333333;
+  --line: #595959;
+  --focus: #0049a3;
+  font: 1.125rem/1.6 system-ui, sans-serif;
+}
+@media (prefers-color-scheme: dark) {
+  :root {
+    --bg: #000000;
+    --fg: #ffffff;
+    --muted: #d6d6d6;
+    --line: #a6a6a6;
+    --focus: #ffd400;
+  }
+}
+body { margin: 0; background: var(--bg); color: var(--fg); }
+main { max-width: 44rem; margin: 0 auto; padding: 1.5rem; }
+h1 { font-size: 2rem; margin: 0 0 0.5rem; }
+h2 { font-size: 1.4rem; margin: 2rem 0 0.5rem; }
+h3 { font-size: 1.15rem; margin: 1.25rem 0 0.25rem; }
+label { display: block; font-weight: 700; margin: 1rem 0 0.25rem; }
+label.check { display: flex; gap: 0.75rem; align-items: center; min-height: 44px; }
+textarea {
+  box-sizing: border-box; width: 100%; font: 1rem/1.5 ui-monospace, monospace;
+  background: var(--bg); color: var(--fg); border: 2px solid var(--line); padding: 0.5rem;
+}
+button, input[type="file"] {
+  min-height: 44px; min-width: 44px; font: inherit; padding: 0.5rem 1rem; margin-top: 0.5rem;
+  background: var(--bg); color: var(--fg); border: 2px solid var(--fg); cursor: pointer;
+}
+input[type="checkbox"] { width: 28px; height: 28px; margin: 0; accent-color: var(--focus); }
+:focus-visible { outline: 3px solid var(--focus); outline-offset: 3px; }
+#source-hint, #current li { color: var(--muted); }
+#errors:not(:empty) { border-left: 4px solid var(--fg); padding: 0.5rem 0.5rem 0.5rem 2rem; }
+#errors li::marker { content: "Problem: "; font-weight: 700; }
+code { font-family: ui-monospace, monospace; }

@@ -1,0 +1,31 @@
+<!doctype html>
+<html lang="en-GB">
+<head>
+  <meta charset="utf-8">
+  <title>Zacess Profile test page</title>
+  <style>
+    html { font-size: 16px; }
+    body { background: #ffffff; color: #555555; font: 12px/1.1 Georgia, serif; }
+    h1 { font-size: 40px; }
+    a { color: #999999; text-decoration: none; }
+    .small { font-size: 9px; }
+    .spin { animation: spin 3s linear infinite; transition: color 2s; }
+    @keyframes spin { to { transform: rotate(360deg); } }
+    .columns { column-count: 3; }
+    .decorated { background-image: linear-gradient(red, blue); box-shadow: 0 0 8px black; text-shadow: 1px 1px 2px black; }
+    button:focus-visible { outline: 1px dotted red; }
+    .icon { font-family: "Material Icons"; }
+  </style>
+</head>
+<body>
+  <h1 id="heading">A heading</h1>
+  <p id="para">A paragraph with a <a id="link" href="#here">link</a> in it, long enough to wrap when the column is narrow, which tests the column width need.</p>
+  <p class="small" id="small">Small print</p>
+  <div class="spin" id="spin">Spinning</div>
+  <div class="columns" id="columns">One two three four five six seven eight nine ten</div>
+  <div class="decorated" id="decorated">Decorated</div>
+  <span class="icon" id="icon" aria-hidden="true">home</span>
+  <pre id="code">fn main() {}</pre>
+  <button id="button">A button</button>
+</body>
+</html>

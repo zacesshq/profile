@@ -1,0 +1,25 @@
+# every need set, with one colour, so each target writes every setting it has
+spec_version = 1
+name = "Every need"
+description = "Large text, a wide focus ring, one column and no decoration on a dark background."
+
+[needs]
+reduce_motion = true
+cursor_size = "extra_large"
+focus_ring_width_px = 4
+line_spacing = 1.5
+character_spacing = 0.12
+column_width = 72
+single_column = true
+hide_decoration = true
+
+[needs.contrast]
+text = 7.0
+
+[needs.font]
+family = "Atkinson Hyperlegible Mono"
+fallback = "monospace"
+size_pt = 16
+
+[palette]
+background = "#101418"

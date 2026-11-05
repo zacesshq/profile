@@ -4,6 +4,8 @@ on:
   push:
     branches: [main]
   pull_request:
+  # lets a maintainer run the checks on any branch by hand, such as a branch in a fork
+  workflow_dispatch:
 
 permissions:
   contents: read
@@ -21,9 +23,9 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        os: [ubuntu-latest, macos-latest]
+        os: [ubuntu-latest, macos-latest, windows-latest]
     runs-on: ${{ matrix.os }}
-    timeout-minutes: 15
+    timeout-minutes: 20
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
@@ -37,11 +39,13 @@ jobs:
         run: cargo fmt --all --check
       - name: Clippy with warnings as errors
         run: cargo clippy --all-targets -- -D warnings
-      - name: Tests, including every shipped profile and a snapshot per target
+      - name: Tests, including every shipped profile, a snapshot per target and the watcher
         run: cargo test
       - name: Release build
         run: cargo build --release
       - name: Check every shipped profile with the release binary
+        # bash on every runner, so the glob is expanded on Windows too
+        shell: bash
         run: ./target/release/zprf check --no-derive profiles/*.toml
 
   msrv:
@@ -59,3 +63,86 @@ jobs:
       - uses: Swatinem/rust-cache@d1527c8f67ef9af357290475d4af4b0fab8f12e0 # v2.9.3
       - name: Tests on the oldest supported toolchain
         run: cargo test --locked
+
+  binaries:
+    # the same five builds the release workflow makes, so a pull request that breaks one is caught
+    # before a tag is pushed rather than after
+    name: Release binary for ${{ matrix.target }}
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - target: aarch64-apple-darwin
+            os: macos-latest
+            runs: true
+          - target: x86_64-apple-darwin
+            os: macos-latest
+            runs: false
+          - target: x86_64-unknown-linux-musl
+            os: ubuntu-latest
+            runs: true
+          - target: aarch64-unknown-linux-musl
+            os: ubuntu-latest
+            # the cross toolchain action runs it under QEMU
+            runs: true
+          - target: x86_64-pc-windows-msvc
+            os: windows-latest
+            runs: true
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: dtolnay/rust-toolchain@b725eda525362e7cf34af9a7243cac1e3f01a7ec # stable
+        with:
+          toolchain: stable
+          targets: ${{ matrix.target }}
+      - name: Set up the musl cross toolchain
+        if: contains(matrix.target, 'musl')
+        uses: taiki-e/setup-cross-toolchain-action@12b7ad4acfa95a1476779d6c06699b96ec1691f8 # v1.42.0
+        with:
+          target: ${{ matrix.target }}
+      - uses: Swatinem/rust-cache@d1527c8f67ef9af357290475d4af4b0fab8f12e0 # v2.9.3
+        with:
+          key: ${{ matrix.target }}
+      - name: Build
+        run: cargo build --release --locked --target ${{ matrix.target }}
+      - name: Check every shipped profile with the built binary
+        if: matrix.runs
+        shell: bash
+        env:
+          TARGET: ${{ matrix.target }}
+        run: |
+          bin="target/$TARGET/release/zprf"
+          # the cross toolchain action names the QEMU runner for the target in this variable
+          runner_var="CARGO_TARGET_$(printf '%s' "$TARGET" | tr 'a-z-' 'A-Z_')_RUNNER"
+          ${!runner_var:-} "$bin" --version
+          ${!runner_var:-} "$bin" check --no-derive profiles/*.toml
+
+  extension:
+    name: Browser extension
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    defaults:
+      run:
+        working-directory: extension
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version: "24"
+          cache: npm
+          cache-dependency-path: extension/package-lock.json
+      - name: Install the pinned dependencies
+        run: npm ci
+      - name: Type check and build for Chrome and Firefox
+        run: npm run build
+      - name: Install Chromium for Playwright
+        run: npx playwright install --with-deps chromium
+      - name: Load the extension in Chromium and check the computed styles on a test page
+        run: npm test
+      - name: Lint the Firefox build with web-ext
+        run: npm run lint:firefox

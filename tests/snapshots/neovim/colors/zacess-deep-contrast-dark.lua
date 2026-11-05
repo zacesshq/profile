@@ -28,6 +28,7 @@ local c = {
   selection_foreground = "#000000",
   selection_soft = "#720072",
   surface = "#000000",
+  surface_alt = "#0a0a0a",
   warning = "#ffd370",
 }
 
@@ -74,7 +75,7 @@ hi("Search", { fg = c.foreground, bg = c.selection_soft, underline = true })
 hi("CurSearch", { fg = c.accent_foreground, bg = c.accent, bold = true })
 hi("IncSearch", { fg = c.accent_foreground, bg = c.accent, bold = true })
 hi("MatchParen", { fg = c.accent, bold = true, underline = true })
-hi("StatusLine", { fg = c.foreground, bg = c.surface, bold = true })
+hi("StatusLine", { fg = c.foreground, bg = c.surface_alt, bold = true })
 hi("StatusLineNC", { fg = c.muted, bg = c.surface })
 hi("TabLine", { fg = c.muted, bg = c.surface })
 hi("TabLineSel", { fg = c.accent_foreground, bg = c.accent, bold = true })

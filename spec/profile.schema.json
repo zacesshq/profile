@@ -168,6 +168,25 @@
           "default": 0.08,
           "description": "The smallest OKLab distance between the current line or a soft selection and the background."
         },
+        "colour_vision_distance": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 1,
+          "default": 0.04,
+          "description": "The smallest OKLab distance between two paired colours under simulated protanopia, deuteranopia and tritanopia."
+        },
+        "tone_difference": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 1,
+          "default": 0.05,
+          "description": "The smallest difference in tone, the cube root of relative luminance, between two paired colours."
+        },
+        "check_error_warning": {
+          "type": "boolean",
+          "default": true,
+          "description": "Whether the error and warning colours are held to the paired colour floors."
+        },
         "apca": {
           "type": "number",
           "minimum": 0,
@@ -217,6 +236,10 @@
         "surface": {
           "$ref": "#/$defs/colour",
           "description": "Panels, bars, sidebars and floating windows."
+        },
+        "surface_alt": {
+          "$ref": "#/$defs/colour",
+          "description": "The second panel colour: activity and status bars, inactive tabs and list rows. Never derived: when missing it is surface."
         },
         "muted": {
           "$ref": "#/$defs/colour",

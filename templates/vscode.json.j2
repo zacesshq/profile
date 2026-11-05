@@ -52,17 +52,17 @@
     "list.activeSelectionForeground": "{{ c.selection_foreground }}",
     "list.inactiveSelectionBackground": "{{ c.selection_soft }}",
     "list.inactiveSelectionForeground": "{{ c.foreground }}",
-    "activityBar.background": "{{ c.surface }}",
+    "activityBar.background": "{{ c.surface_alt }}",
     "activityBar.foreground": "{{ c.foreground }}",
     "activityBar.inactiveForeground": "{{ c.muted }}",
     "activityBar.border": "{{ c.border }}",
     "sideBar.background": "{{ c.surface }}",
     "sideBar.foreground": "{{ c.foreground }}",
     "sideBar.border": "{{ c.border }}",
-    "statusBar.background": "{{ c.surface }}",
+    "statusBar.background": "{{ c.surface_alt }}",
     "statusBar.foreground": "{{ c.foreground }}",
     "statusBar.border": "{{ c.border }}",
-    "titleBar.activeBackground": "{{ c.surface }}",
+    "titleBar.activeBackground": "{{ c.surface_alt }}",
     "titleBar.activeForeground": "{{ c.foreground }}",
     "tab.activeBackground": "{{ c.background }}",
     "tab.activeForeground": "{{ c.foreground }}",
@@ -126,6 +126,13 @@
   "workbench.list.smoothScrolling": false,
   "terminal.integrated.smoothScrolling": false,
   "terminal.integrated.cursorBlinking": false,
+{% endif %}
+{% if needs.single_column %}
+  "workbench.editor.openSideBySideDirection": "down",
+  "diffEditor.renderSideBySide": false,
+{% endif %}
+{% if needs.hide_decoration %}
+  "editor.minimap.enabled": false,
 {% endif %}
 {% if needs.block_cursor %}
   "editor.cursorStyle": "block",

@@ -31,3 +31,8 @@ font-size = {{ needs.font_size_pt }}
 {% if needs.cell_height_percent %}
 adjust-cell-height = {{ needs.cell_height_percent - 100 }}%
 {% endif %}
+{% if needs.hide_decoration %}
+# a solid background, so text is never drawn over whatever sits behind the window
+background-opacity = 1
+background-blur = false
+{% endif %}

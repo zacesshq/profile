@@ -146,17 +146,14 @@ struct NeedsContext {
     cursor_width_pt: f64,
     block_cursor: bool,
     focus_ring_width_px: Option<u8>,
+    /// Heavy pane borders, for tmux, whose borders are drawn in character cells and so cannot be
+    /// given a width: a ring of two pixels or more asks for the heaviest line it draws.
+    heavy_borders: bool,
+    single_column: bool,
+    hide_decoration: bool,
 }
 
-/// Font style per syntax role, matching the Zacess themes so a token never rests on colour alone.
-pub const STYLES: &[(&str, &[&str])] = &[
-    ("keyword", &["bold"]),
-    ("control", &["bold"]),
-    ("tag", &["bold"]),
-    ("parameter", &["italic"]),
-    ("comment", &["italic"]),
-    ("invalid", &["underline"]),
-];
+pub use crate::profile::STYLES;
 
 fn context(profile: &Profile) -> Result<TemplateContext<'_>> {
     let p = &profile.palette;
@@ -165,8 +162,10 @@ fn context(profile: &Profile) -> Result<TemplateContext<'_>> {
             .with_context(|| format!("{role} is missing: run derive before render"))
     };
     let mut c = BTreeMap::new();
+    // a role with a fallback is always present for templates, so a template can name the second
+    // panel colour and still render a profile that leaves it out
     for &role in crate::profile::Palette::ROLES {
-        c.insert(role, hex(p.get(role), role)?);
+        c.insert(role, hex(p.resolved(role), role)?);
     }
     let mut syntax = BTreeMap::new();
     for &role in Syntax::ROLES {
@@ -222,6 +221,9 @@ fn context(profile: &Profile) -> Result<TemplateContext<'_>> {
             },
             block_cursor: cursor != CursorSize::Standard,
             focus_ring_width_px: needs.focus_ring_width_px,
+            heavy_borders: needs.focus_ring_width_px.is_some_and(|w| w >= 2),
+            single_column: needs.single_column.unwrap_or(false),
+            hide_decoration: needs.hide_decoration.unwrap_or(false),
         },
         c,
         syntax,
@@ -229,13 +231,7 @@ fn context(profile: &Profile) -> Result<TemplateContext<'_>> {
         ansi: ansi.iter().map(|c| c.hex()).collect(),
         styles: Syntax::ROLES
             .iter()
-            .map(|&role| {
-                let style = STYLES
-                    .iter()
-                    .find(|(r, _)| *r == role)
-                    .map_or(&[][..], |s| s.1);
-                (role, style.to_vec())
-            })
+            .map(|&role| (role, crate::profile::style(role).to_vec()))
             .collect(),
     })
 }
@@ -276,6 +272,27 @@ pub fn relative_path(profile: &Profile, target: &Target) -> PathBuf {
 
 /// Writes one target below `out` and returns the path written.
 pub fn write(profile: &Profile, target: &Target, out: &Path) -> Result<PathBuf> {
+    write_guarded(profile, target, out, &[])
+}
+
+/// The path a file would have once every link is followed, for a file that may not exist yet.
+fn resolved(path: &Path) -> Option<PathBuf> {
+    if let Ok(real) = path.canonicalize() {
+        return Some(real);
+    }
+    let parent = path.parent()?.canonicalize().ok()?;
+    Some(parent.join(path.file_name()?))
+}
+
+/// As `write`, refusing to write over any of `inputs`, such as the profile being rendered: with a
+/// folder or a link in the way, an output path can name the input it came from. The file is
+/// written beside its final name and then renamed over it, so an app reading it never sees half.
+pub fn write_guarded(
+    profile: &Profile,
+    target: &Target,
+    out: &Path,
+    inputs: &[PathBuf],
+) -> Result<PathBuf> {
     if out.as_os_str().is_empty() {
         bail!("--out must name a directory");
     }
@@ -284,6 +301,21 @@ pub fn write(profile: &Profile, target: &Target, out: &Path) -> Result<PathBuf> 
     if let Some(dir) = path.parent() {
         std::fs::create_dir_all(dir).with_context(|| format!("cannot create {}", dir.display()))?;
     }
-    std::fs::write(&path, text).with_context(|| format!("cannot write {}", path.display()))?;
+    let real = resolved(&path).with_context(|| format!("cannot resolve {}", path.display()))?;
+    if inputs.iter().filter_map(|i| resolved(i)).any(|i| i == real) {
+        bail!(
+            "{} is the profile being read, so it was not overwritten: choose another --out",
+            path.display()
+        );
+    }
+    let name = path
+        .file_name()
+        .with_context(|| format!("{} has no file name", path.display()))?;
+    let temp = path.with_file_name(format!(".{}.zprf-tmp", name.to_string_lossy()));
+    std::fs::write(&temp, text).with_context(|| format!("cannot write {}", temp.display()))?;
+    if let Err(err) = std::fs::rename(&temp, &path) {
+        let _ = std::fs::remove_file(&temp);
+        return Err(err).with_context(|| format!("cannot write {}", path.display()));
+    }
     Ok(path)
 }

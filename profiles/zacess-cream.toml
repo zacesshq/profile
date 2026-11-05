@@ -19,6 +19,8 @@ overlay = 4.5
 terminal = 7.0
 terminal_dim = 4.5
 highlight_distance = 0.08
+colour_vision_distance = 0.04
+tone_difference = 0.05
 
 [needs.font]
 family = "Atkinson Hyperlegible Mono"
@@ -29,6 +31,7 @@ size_pt = 14
 background = "#fdf6e3"
 foreground = "#000000"
 surface = "#f2efe9"
+surface_alt = "#e9e5dd"
 muted = "#3f382c"
 border = "#6e6555"
 accent = "#004498"
@@ -42,7 +45,9 @@ selection_foreground = "#fdf6e3"
 selection_soft = "#c8a9ff"
 line_highlight = "#c8dadd"
 error = "#770004"
-warning = "#513100"
+# was #513100, which matched the error colour in tone and merged with it under simulated colour
+# vision deficiencies; this burnt orange is the most colourful shade that keeps them apart at 7:1
+warning = "#803200"
 info = "#00357a"
 
 [palette.syntax]

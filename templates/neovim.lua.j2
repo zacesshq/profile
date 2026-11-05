@@ -45,7 +45,7 @@ hi("Search", { fg = c.foreground, bg = c.selection_soft, underline = true })
 hi("CurSearch", { fg = c.accent_foreground, bg = c.accent, bold = true })
 hi("IncSearch", { fg = c.accent_foreground, bg = c.accent, bold = true })
 hi("MatchParen", { fg = c.accent, bold = true, underline = true })
-hi("StatusLine", { fg = c.foreground, bg = c.surface, bold = true })
+hi("StatusLine", { fg = c.foreground, bg = c.surface_alt, bold = true })
 hi("StatusLineNC", { fg = c.muted, bg = c.surface })
 hi("TabLine", { fg = c.muted, bg = c.surface })
 hi("TabLineSel", { fg = c.accent_foreground, bg = c.accent, bold = true })
@@ -151,5 +151,17 @@ if vim.g.zacess_profile_options ~= false then
 {% endif %}
 {% if needs.column_width %}
   vim.opt.colorcolumn = "{{ needs.column_width + 1 }}"
+{% endif %}
+{% if needs.single_column %}
+  -- a diff opens one buffer above the other instead of side by side
+  vim.opt.diffopt:remove("vertical")
+  vim.opt.diffopt:remove("horizontal")
+  vim.opt.diffopt:append("horizontal")
+{% endif %}
+{% if needs.hide_decoration %}
+  -- no tildes past the end of a buffer and no see-through floating windows or menus
+  vim.opt.fillchars:append({ eob = " " })
+  vim.o.winblend = 0
+  vim.o.pumblend = 0
 {% endif %}
 end

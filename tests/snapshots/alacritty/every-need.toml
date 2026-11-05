@@ -1,0 +1,49 @@
+# for Alacritty, from the profile Every need
+# written by zprf; change the profile and render again rather than editing this file
+# load it from alacritty.toml with: [general] import = ["<path to this file>"]
+
+[colors.primary]
+background = "#101418"
+foreground = "#ffffff"
+
+[colors.cursor]
+cursor = "#dab600"
+text = "#101418"
+
+[colors.selection]
+background = "#b68cfa"
+text = "#101418"
+
+[colors.normal]
+black = "#101418"
+red = "#ff7867"
+green = "#55b64c"
+yellow = "#b6a200"
+blue = "#6da0ff"
+magenta = "#e07ddd"
+cyan = "#00b4b4"
+white = "#b8b8b8"
+
+[colors.bright]
+black = "#a1a1a1"
+red = "#ff9e8f"
+green = "#6ccd63"
+yellow = "#cfb800"
+blue = "#91b8ff"
+magenta = "#f894f5"
+cyan = "#00cccc"
+white = "#ffffff"
+
+# a solid background, so text is never drawn over whatever sits behind the window
+[window]
+opacity = 1.0
+blur = false
+
+[cursor.style]
+shape = "Block"
+blinking = "Never"
+
+[font]
+size = 16.0
+offset = { x = 0, y = 11 }
+normal = { family = "Atkinson Hyperlegible Mono" }

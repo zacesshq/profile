@@ -1,0 +1,4 @@
+# every text file is stored and checked out with LF endings, so the snapshot tests and the
+# templates compare byte for byte on Windows too
+* text=auto eol=lf
+*.png binary

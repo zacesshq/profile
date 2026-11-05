@@ -1,6 +1,6 @@
 [package]
 name = "zacess-profile"
-version = "0.1.0"
+version = "0.2.0"
 edition = "2024"
 rust-version = "1.88"
 description = "One accessibility profile for every app: state your needs once, derive a checked palette and render it for terminals and editors"
@@ -11,15 +11,17 @@ homepage = "https://zacess.com"
 readme = "README.md"
 keywords = ["accessibility", "contrast", "theme", "terminal", "wcag"]
 categories = ["accessibility", "command-line-utilities"]
+# every pattern is anchored to the crate root, so a README or LICENSE inside extension/node_modules
+# is never packaged with the crate
 include = [
-    "src/**/*",
-    "templates/**/*",
-    "profiles/**/*",
-    "spec/**/*",
-    "README.md",
-    "CHANGELOG.md",
-    "LICENSE",
-    "NOTICE",
+    "/src/**/*",
+    "/templates/**/*",
+    "/profiles/**/*",
+    "/spec/**/*",
+    "/README.md",
+    "/CHANGELOG.md",
+    "/LICENSE",
+    "/NOTICE",
 ]
 
 [[bin]]

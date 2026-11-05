@@ -19,6 +19,8 @@ overlay = 4.5
 terminal = 7.0
 terminal_dim = 4.5
 highlight_distance = 0.08
+colour_vision_distance = 0.04
+tone_difference = 0.05
 
 [needs.font]
 family = "Atkinson Hyperlegible Mono"
@@ -29,6 +31,7 @@ size_pt = 14
 background = "#000000"
 foreground = "#ffffff"
 surface = "#000000"
+surface_alt = "#0a0a0a"
 muted = "#b3b3b3"
 border = "#00ffff"
 accent = "#00ffff"

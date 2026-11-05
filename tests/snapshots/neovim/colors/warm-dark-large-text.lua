@@ -28,27 +28,28 @@ local c = {
   selection_foreground = "#1b1612",
   selection_soft = "#32204d",
   surface = "#221d19",
-  warning = "#e89927",
+  surface_alt = "#221d19",
+  warning = "#f9a93d",
 }
 
 local s = {
   added = "#5bbf62",
   attribute = "#e59b00",
-  changed = "#5dafff",
+  changed = "#a2d0ff",
   comment = "#90b735",
-  control = "#f683c8",
+  control = "#ff99d5",
   ["function"] = "#6badff",
   invalid = "#ff877f",
   keyword = "#be96ff",
   number = "#ff895f",
   operator = "#ffffff",
   parameter = "#f98f3a",
-  property = "#9ca2ff",
+  property = "#c1c7ff",
   regex = "#ff83a3",
-  removed = "#ff877f",
-  string = "#5bbf62",
+  removed = "#ffa39b",
+  string = "#8df192",
   tag = "#be96ff",
-  type = "#00beb6",
+  type = "#30cfc7",
   variable = "#ffffff",
 }
 
@@ -74,7 +75,7 @@ hi("Search", { fg = c.foreground, bg = c.selection_soft, underline = true })
 hi("CurSearch", { fg = c.accent_foreground, bg = c.accent, bold = true })
 hi("IncSearch", { fg = c.accent_foreground, bg = c.accent, bold = true })
 hi("MatchParen", { fg = c.accent, bold = true, underline = true })
-hi("StatusLine", { fg = c.foreground, bg = c.surface, bold = true })
+hi("StatusLine", { fg = c.foreground, bg = c.surface_alt, bold = true })
 hi("StatusLineNC", { fg = c.muted, bg = c.surface })
 hi("TabLine", { fg = c.muted, bg = c.surface })
 hi("TabLineSel", { fg = c.accent_foreground, bg = c.accent, bold = true })

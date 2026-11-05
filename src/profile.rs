@@ -116,6 +116,18 @@ pub struct ContrastNeeds {
     /// The smallest OKLab distance between a highlight and the background, so it stays visible.
     #[serde(default = "highlight_distance")]
     pub highlight_distance: f64,
+    /// The smallest OKLab distance between two paired colours as a person with protanopia,
+    /// deuteranopia or tritanopia sees them, so neighbouring roles never merge.
+    #[serde(default = "colour_vision_distance")]
+    pub colour_vision_distance: f64,
+    /// The smallest tone difference (the cube root of relative luminance) between two paired
+    /// colours, so they still differ with no colour vision at all.
+    #[serde(default = "tone_difference")]
+    pub tone_difference: f64,
+    /// Whether errors and warnings are held to the paired colour floors. The Zacess themes do not
+    /// pair them, so turning this off keeps a themes palette as it is.
+    #[serde(default = "yes")]
+    pub check_error_warning: bool,
     /// An optional APCA floor (absolute Lc) for text, checked on top of the WCAG ratio.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub apca: Option<f64>,
@@ -133,6 +145,12 @@ fn four_and_a_half() -> f64 {
 fn highlight_distance() -> f64 {
     0.08
 }
+fn colour_vision_distance() -> f64 {
+    0.04
+}
+fn tone_difference() -> f64 {
+    0.05
+}
 
 impl Default for ContrastNeeds {
     fn default() -> Self {
@@ -143,6 +161,9 @@ impl Default for ContrastNeeds {
             terminal: 7.0,
             terminal_dim: 4.5,
             highlight_distance: 0.08,
+            colour_vision_distance: 0.04,
+            tone_difference: 0.05,
+            check_error_warning: true,
             apca: None,
         }
     }
@@ -219,6 +240,7 @@ colour_roles!(
         background => "background",
         foreground => "foreground",
         surface => "surface",
+        surface_alt => "surface_alt",
         muted => "muted",
         border => "border",
         accent => "accent",
@@ -267,6 +289,25 @@ colour_roles!(
     }
 );
 
+/// Font style per syntax role, matching the Zacess themes so a token never rests on colour alone.
+/// Roles missing here are drawn in the regular style.
+pub const STYLES: &[(&str, &[&str])] = &[
+    ("keyword", &["bold"]),
+    ("control", &["bold"]),
+    ("tag", &["bold"]),
+    ("parameter", &["italic"]),
+    ("comment", &["italic"]),
+    ("invalid", &["underline"]),
+];
+
+/// The font style of a syntax role, empty for the regular style.
+pub fn style(role: &str) -> &'static [&'static str] {
+    STYLES
+        .iter()
+        .find(|(r, _)| *r == role)
+        .map_or(&[][..], |s| s.1)
+}
+
 #[derive(Debug, Clone, Default, Serialize, Deserialize, PartialEq)]
 #[serde(deny_unknown_fields)]
 pub struct Terminal {
@@ -279,6 +320,28 @@ pub struct Terminal {
     /// Slots that programs use as a background colour, so they are not checked as text.
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
     pub background_slots: Vec<u8>,
+}
+
+impl Palette {
+    /// Roles that may stay missing after derivation, each with the role it falls back to. A second
+    /// panel colour is only worth naming when an app draws one, so leaving it out means the panels
+    /// share `surface` and nothing new is measured.
+    pub const FALLBACKS: &'static [(&'static str, &'static str)] = &[("surface_alt", "surface")];
+
+    /// The colour a role resolves to, following its fallback when it is not set.
+    pub fn resolved(&self, role: &str) -> Option<Rgb> {
+        self.get(role).or_else(|| {
+            Self::FALLBACKS
+                .iter()
+                .find(|(r, _)| *r == role)
+                .and_then(|(_, fallback)| self.get(fallback))
+        })
+    }
+
+    /// Whether a role may be left out of a complete palette.
+    pub fn has_fallback(role: &str) -> bool {
+        Self::FALLBACKS.iter().any(|(r, _)| *r == role)
+    }
 }
 
 impl Profile {
@@ -375,10 +438,18 @@ impl Profile {
                 bail!("needs.contrast.{key} is {value}: a WCAG ratio runs from 1 to 21");
             }
         }
-        if !(0.0..=1.0).contains(&c.highlight_distance) {
+        for (key, value) in [
+            ("highlight_distance", c.highlight_distance),
+            ("colour_vision_distance", c.colour_vision_distance),
+        ] {
+            if !(0.0..=1.0).contains(&value) {
+                bail!("needs.contrast.{key} is {value}: an OKLab distance runs from 0 to 1");
+            }
+        }
+        if !(0.0..=1.0).contains(&c.tone_difference) {
             bail!(
-                "needs.contrast.highlight_distance is {}: an OKLab distance runs from 0 to 1",
-                c.highlight_distance
+                "needs.contrast.tone_difference is {}: a tone difference runs from 0 to 1",
+                c.tone_difference
             );
         }
         if let Some(lc) = c.apca

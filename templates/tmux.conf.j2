@@ -16,3 +16,7 @@ set -g clock-mode-colour "{{ c.accent }}"
 {% if needs.reduce_motion %}
 set -g visual-bell off
 {% endif %}
+{% if needs.heavy_borders %}
+# borders are drawn in character cells, so the widest focus ring tmux can draw is a heavy line
+set -g pane-border-lines heavy
+{% endif %}

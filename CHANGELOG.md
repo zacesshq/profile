@@ -7,6 +7,10 @@ Every notable change to Zacess Profile is listed here. The format follows
 
 ## [Unreleased]
 
+### Added
+
+- A dark and a light banner and a 1280 by 640 social preview image in `assets/`, beside the mark.
+
 ## [0.2.1] - 2026-11-05
 
 ### Added

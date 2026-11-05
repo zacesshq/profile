@@ -1,9 +1,11 @@
 # Packaging
 
-How Zacess Profile reaches crates.io, Homebrew and winget after a release. The binaries and the
-crates.io upload come from [`release.yml`](../.github/workflows/release.yml). The Homebrew formula
-and the winget manifests are submitted by a maintainer from their own machine with their own
-credentials. No token is ever stored in this repository.
+How Zacess Profile reaches crates.io, Homebrew and winget after a release. Everything comes from
+[`release.yml`](../.github/workflows/release.yml) once the release exists: the binaries, the
+crates.io upload, the formula in the tap and the winget-pkgs pull request. The tokens it uses for
+the tap and winget are stored as Actions secrets and are listed in the
+[workflows README](../.github/workflows/README.md#secrets-for-the-stores). The steps below are the
+manual route, for a missing secret, a failed job or the first version of a package.
 
 Before any of these, the release must exist: the tag `vX.Y.Z` pushed, the GitHub release made from
 it and `release.yml` finished, so the five archives and their `.sha256` files are attached.
@@ -52,6 +54,12 @@ The tap is `zacesshq/homebrew-tap`, which Homebrew reads as `zacesshq/tap`. The 
 the release archive for the person's platform rather than building from source, so it needs the
 SHA-256 of each of the four Unix archives.
 
+The **Update the Homebrew tap** job in `release.yml` does all of this by itself. It fills the
+formula with `fill-checksums.sh`, writes it to a branch of the tap as a commit by Zac Bot, opens a
+pull request and squash merges it, since the tap's ruleset takes changes on `main` only that way.
+It needs the `TAP_TOKEN` secret and skips with a note in the run summary without it. To do it by
+hand:
+
 1. Fill the formula from the release files and copy it into the tap:
 
    ```sh
@@ -76,6 +84,15 @@ starter profiles land in `$(brew --prefix)/share/zacess-profile/profiles`.
 The package is `Zacess.Profile`. The installer is the Windows zip from the release, installed as a
 portable program with the command alias `zprf`.
 
+The **Submit to winget** job in `release.yml` opens the pull request for each new version from the
+fork `zaccesss/winget-pkgs`, using [WinGet Releaser](https://github.com/vedantmgoyal9/winget-releaser)
+and the `WINGET_TOKEN` secret. It builds the new manifests from the last version already in
+winget-pkgs, so the first version of a package is always submitted by hand. Zacess.Profile 0.2.0
+was submitted that way and is
+[pending review](https://github.com/microsoft/winget-pkgs/pull/471488). Until it is accepted the
+job skips with a note in the run summary. It submits every version after that by itself. To submit
+by hand:
+
 1. Fill the manifests from the release files:
 
    ```sh
@@ -96,5 +113,5 @@ portable program with the command alias `zprf`.
 4. Open a pull request to microsoft/winget-pkgs. Their checks take a day or two and the package is
    live once it merges.
 
-Once accepted, the install line is `winget install Zacess.Profile`. Every later release is submitted
-the same way with its own version folder.
+Once accepted, the install line is `winget install Zacess.Profile`. A later release that the job
+could not submit goes the same way with its own version folder.

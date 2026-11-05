@@ -7,6 +7,16 @@ Every notable change to Zacess Profile is listed here. The format follows
 
 ## [Unreleased]
 
+### Added
+
+- The release workflow now updates every store by itself once each platform's files are attached.
+  It tells zacess.com to rebuild with a `profile-release` dispatch, lands the filled formula in
+  `zacesshq/homebrew-tap` through a pull request it merges and opens the winget-pkgs pull request
+  for the new version. Each job skips with a note when its secret is missing and never fails the
+  release. winget submissions start from the version after 0.2.0, once that first one is accepted.
+- crates.io version and download badges in the README. The install section now lists Cargo,
+  Homebrew and winget, with winget marked as pending review.
+
 ## [0.2.0] - 2026-11-05
 
 ### Added

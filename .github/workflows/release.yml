@@ -1,7 +1,11 @@
 # builds zprf for each platform when a version tag is pushed, attaches each archive with its
 # SHA-256 sum to the GitHub release for that tag, then publishes the crate to crates.io through
-# Trusted Publishing. The release itself is made by a maintainer from a signed tag, so this
-# workflow waits for it and never creates one.
+# Trusted Publishing. Once every file is attached it also tells zacess.com to rebuild, updates
+# the formula in zacesshq/homebrew-tap and opens the winget-pkgs pull request for the new version.
+# Each of those three skips with a note in the run summary when its secret is missing and only
+# reports a failure, so none of them can fail a release whose files are already out. The release
+# itself is made by a maintainer from a signed tag, so this workflow waits for it and never
+# creates one.
 #
 # assets are added after the release is published, which only works while immutable releases are
 # off for this repository. Turning them on means making each release as a draft, letting this
@@ -178,3 +182,197 @@ jobs:
         run: cargo publish --locked
         env:
           CARGO_REGISTRY_TOKEN: ${{ steps.auth.outputs.token }}
+
+  # rebuilds zacess.com straight away. Runs once every platform's files are attached, so the site
+  # never reads a half-filled release.
+  notify-site:
+    name: Tell the website
+    needs: build
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Tell the website about the release
+        env:
+          # an organisation secret: a fine-grained token limited to zacesshq/website with Contents read and write, which is what a repository dispatch needs
+          SITE_DISPATCH_TOKEN: ${{ secrets.SITE_DISPATCH_TOKEN }}
+        run: |
+          if [ -z "$SITE_DISPATCH_TOKEN" ]; then
+            echo "Skipped telling the website: the SITE_DISPATCH_TOKEN secret is not set. Its daily deploy picks up $GITHUB_REF_NAME instead." >> "$GITHUB_STEP_SUMMARY"
+            exit 0
+          fi
+          # the files are already attached, so a failed dispatch is reported but never fails the run
+          if curl -fsS -X POST \
+            -H "Authorization: Bearer $SITE_DISPATCH_TOKEN" \
+            -H "Accept: application/vnd.github+json" \
+            -H "X-GitHub-Api-Version: 2022-11-28" \
+            https://api.github.com/repos/zacesshq/website/dispatches \
+            -d "{\"event_type\":\"profile-release\",\"client_payload\":{\"tag\":\"$GITHUB_REF_NAME\"}}"; then
+            echo "Asked zacess.com to rebuild with $GITHUB_REF_NAME." >> "$GITHUB_STEP_SUMMARY"
+          else
+            echo "::warning::Could not send the release to zacesshq/website; its daily deploy picks up $GITHUB_REF_NAME instead."
+            echo "Could not tell the website about $GITHUB_REF_NAME; its daily deploy picks it up instead." >> "$GITHUB_STEP_SUMMARY"
+          fi
+
+  # fills the formula from the release's checksums and lands it in zacesshq/homebrew-tap. The
+  # tap's protect-main ruleset only accepts a squash-merged pull request on main, so the formula
+  # goes to a branch, a pull request is opened from it and merged straight away.
+  homebrew:
+    name: Update the Homebrew tap
+    needs: build
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    permissions:
+      # only to read this repository and download the .sha256 files of the release
+      contents: read
+    steps:
+      - name: Check for the tap token
+        id: ready
+        env:
+          # a fine-grained token from the zaccesssbot account limited to zacesshq/homebrew-tap with
+          # Contents and Pull requests read and write
+          TAP_TOKEN: ${{ secrets.TAP_TOKEN }}
+        run: |
+          if [ -z "$TAP_TOKEN" ]; then
+            echo "Skipped the Homebrew tap: the TAP_TOKEN secret is not set. Update the formula by hand as packaging/README.md describes." >> "$GITHUB_STEP_SUMMARY"
+            echo "go=false" >> "$GITHUB_OUTPUT"
+          else
+            echo "go=true" >> "$GITHUB_OUTPUT"
+          fi
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        if: steps.ready.outputs.go == 'true'
+        with:
+          persist-credentials: false
+      - name: Fill the formula from the release's checksums
+        id: fill
+        if: steps.ready.outputs.go == 'true'
+        continue-on-error: true
+        env:
+          GH_TOKEN: ${{ github.token }}
+          TAG: ${{ github.ref_name }}
+        run: |
+          gh release download "$TAG" --repo "$GITHUB_REPOSITORY" --pattern '*.sha256' --dir "$RUNNER_TEMP/sums"
+          packaging/fill-checksums.sh "$TAG" "$RUNNER_TEMP/packaging" "$RUNNER_TEMP/sums"
+      - name: Send the formula to zacesshq/homebrew-tap
+        id: tap
+        if: steps.ready.outputs.go == 'true' && steps.fill.outcome == 'success'
+        continue-on-error: true
+        env:
+          GH_TOKEN: ${{ secrets.TAP_TOKEN }}
+          TAG: ${{ github.ref_name }}
+          FORMULA: ${{ runner.temp }}/packaging/homebrew/zacess-profile.rb
+        run: |
+          version="${TAG#v}"
+          tap=zacesshq/homebrew-tap
+          path=Formula/zacess-profile.rb
+          branch="zacess-profile-$version"
+          title="feat: Zacess Profile $version"
+
+          # a rerun after the formula landed has nothing to send; git and the contents API name a
+          # file by the same blob hash
+          current="$(gh api "repos/$tap/contents/$path" --jq .sha 2> /dev/null || true)"
+          if [ "$current" = "$(git hash-object "$FORMULA")" ]; then
+            echo "The tap already has the zacess-profile $version formula." >> "$GITHUB_STEP_SUMMARY"
+            exit 0
+          fi
+
+          # a branch left by an earlier failed run is started again from main
+          gh api -X DELETE "repos/$tap/git/refs/heads/$branch" > /dev/null 2>&1 || true
+          main="$(gh api "repos/$tap/git/ref/heads/main" --jq .object.sha)"
+          gh api -X POST "repos/$tap/git/refs" -f ref="refs/heads/$branch" -f sha="$main" > /dev/null
+
+          args=(-X PUT "repos/$tap/contents/$path"
+            -f message="$title"
+            -f content="$(base64 -w 0 "$FORMULA")"
+            -f branch="$branch"
+            -f "author[name]=Zac Bot" -f "author[email]=automation@isaacadjei.me"
+            -f "committer[name]=Zac Bot" -f "committer[email]=automation@isaacadjei.me")
+          if [ -n "$current" ]; then
+            args+=(-f sha="$current")
+          fi
+          gh api "${args[@]}" > /dev/null
+
+          number="$(gh api -X POST "repos/$tap/pulls" \
+            -f title="$title" -f head="$branch" -f base=main \
+            -f body="Updates the zacess-profile formula to $version with the checksums of the files attached to https://github.com/zacesshq/profile/releases/tag/$TAG." \
+            --jq .number)"
+
+          # GitHub works out whether a new pull request can merge in the background, so the first
+          # attempt can be turned away
+          for attempt in 1 2 3 4 5 6; do
+            if gh api -X PUT "repos/$tap/pulls/$number/merge" -f merge_method=squash -f commit_title="$title (#$number)" > /dev/null; then
+              echo "Merged https://github.com/$tap/pull/$number, so \`brew upgrade zacess-profile\` now installs $version." >> "$GITHUB_STEP_SUMMARY"
+              exit 0
+            fi
+            echo "The pull request could not merge yet (attempt $attempt of 6). Waiting 10 seconds."
+            sleep 10
+          done
+          echo "Opened https://github.com/$tap/pull/$number but could not merge it." >> "$GITHUB_STEP_SUMMARY"
+          exit 1
+      # the files are already attached, so a tap that could not be updated is reported but never
+      # fails the run
+      - name: Report a tap update that failed
+        if: steps.fill.outcome == 'failure' || steps.tap.outcome == 'failure'
+        env:
+          TAG: ${{ github.ref_name }}
+        run: |
+          echo "::warning::Could not update zacesshq/homebrew-tap for $TAG. Update the formula by hand as packaging/README.md describes."
+          echo "Could not update the Homebrew tap for $TAG; see the log of this job." >> "$GITHUB_STEP_SUMMARY"
+
+  # opens the pull request for the new version to microsoft/winget-pkgs. winget-pkgs takes
+  # submissions from the maintainer's own account, so the pull request comes from the fork
+  # zaccesss/winget-pkgs with that account's token. The action builds each version from the last
+  # one already in winget-pkgs, so it has nothing to work from until the first version is accepted.
+  winget:
+    name: Submit to winget
+    needs: build
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    permissions:
+      # the action reads the release of this tag with the workflow's own token
+      contents: read
+    steps:
+      - name: Check for the token and the package
+        id: ready
+        env:
+          # a classic token from the zaccesss account with the public_repo scope
+          WINGET_TOKEN: ${{ secrets.WINGET_TOKEN }}
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          if [ -z "$WINGET_TOKEN" ]; then
+            echo "Skipped winget: the WINGET_TOKEN secret is not set. Submit the manifests by hand as packaging/README.md describes." >> "$GITHUB_STEP_SUMMARY"
+            echo "go=false" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+          if ! gh api repos/microsoft/winget-pkgs/contents/manifests/z/Zacess/Profile > /dev/null 2>&1; then
+            echo "Skipped winget: Zacess.Profile is not in microsoft/winget-pkgs yet, so there is no earlier version to build on. Submit this one by hand as packaging/README.md describes." >> "$GITHUB_STEP_SUMMARY"
+            echo "go=false" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+          echo "go=true" >> "$GITHUB_OUTPUT"
+      - name: Open the winget-pkgs pull request
+        id: winget
+        if: steps.ready.outputs.go == 'true'
+        continue-on-error: true
+        uses: vedantmgoyal9/winget-releaser@b7370d4d152efdce803a26cc6ca9eee58cb2ad54 # v2
+        with:
+          identifier: Zacess.Profile
+          installers-regex: '-x86_64-pc-windows-msvc\.zip$'
+          release-tag: ${{ github.ref_name }}
+          release-notes-url: https://github.com/zacesshq/profile/releases/tag/${{ github.ref_name }}
+          fork-user: zaccesss
+          token: ${{ secrets.WINGET_TOKEN }}
+      # the files are already attached, so a submission that failed is reported but never fails
+      # the run
+      - name: Report the submission
+        if: steps.ready.outputs.go == 'true'
+        env:
+          OUTCOME: ${{ steps.winget.outcome }}
+          PR_URL: ${{ steps.winget.outputs.pr-url }}
+          TAG: ${{ github.ref_name }}
+        run: |
+          if [ "$OUTCOME" = "success" ]; then
+            echo "Opened $PR_URL for Zacess.Profile ${TAG#v}." >> "$GITHUB_STEP_SUMMARY"
+          else
+            echo "::warning::Could not open the winget-pkgs pull request for $TAG. Submit the manifests by hand as packaging/README.md describes."
+            echo "Could not open the winget-pkgs pull request for $TAG; see the log of this job." >> "$GITHUB_STEP_SUMMARY"
+          fi

@@ -28,15 +28,16 @@ release.
 - `zprf os --print`, a preview of the system settings a profile maps to on macOS, GNOME and Windows
 - CI on Windows, a build of every release binary on each pull request, a release workflow and the
   Homebrew and winget packaging in [packaging](packaging)
+- The first release with binaries for macOS, Linux and Windows, on crates.io through Trusted
+  Publishing and in `zacesshq/homebrew-tap`
 - An optional `surface_alt` role for the second panel colour, measured like `surface`. The warning
   colours of five starter profiles match the Zacess themes, where errors and warnings now stay apart
   under colour vision deficiencies
 
 ## Next
 
-- **The first release with binaries.** The release workflow, the Homebrew formula and the winget
-  manifests are ready. They need the 0.2.0 tag, the first crates.io publish by hand followed by the
-  trusted publisher, the formula copied into `zacesshq/homebrew-tap` and a winget submission
+- **winget.** The first submission, `Zacess.Profile` 0.2.0, is waiting for review in
+  microsoft/winget-pkgs. Once it is accepted, each release opens the next one by itself
 - **Extension store listings.** The listing text, icons, promotional tile and a real screenshot
   are ready in [extension/STORE.md](extension/STORE.md). Nothing is published to a store yet
 - **Terminal colours against the default text.** The Zacess themes also check each terminal colour

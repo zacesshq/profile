@@ -9,6 +9,8 @@ State what you need to read a screen once. Get a checked palette in every termin
 
 [![CI](https://github.com/zacesshq/profile/actions/workflows/ci.yml/badge.svg)](https://github.com/zacesshq/profile/actions/workflows/ci.yml)
 [![Licence](https://img.shields.io/badge/licence-Apache--2.0-blue.svg)](LICENSE)
+[![crates.io version](https://img.shields.io/crates/v/zacess-profile)](https://crates.io/crates/zacess-profile)
+[![crates.io downloads](https://img.shields.io/crates/d/zacess-profile)](https://crates.io/crates/zacess-profile)
 
 `zprf` reads a small TOML file that describes needs: a contrast floor, a font and size,
 reduced motion, a cursor size, a focus ring, line spacing and a line length. It derives any colour
@@ -50,9 +52,31 @@ flowchart LR
 
 ## Install
 
-Prebuilt binaries for macOS, Linux and Windows are attached to each GitHub release from the next one
-on, along with a Homebrew formula and a winget package. Until then, build from source with a Rust
-toolchain (1.88 or newer). This installs the `zprf` command:
+Every release attaches prebuilt binaries for macOS, Linux and Windows to its
+[GitHub release](https://github.com/zacesshq/profile/releases/latest). Every route below installs
+the `zprf` command.
+
+With Homebrew on macOS or Linux:
+
+```sh
+brew install zacesshq/tap/zacess-profile
+```
+
+With Cargo and a Rust toolchain (1.88 or newer):
+
+```sh
+cargo install zacess-profile
+```
+
+With winget on Windows, once the package is accepted. It is
+[pending review](https://github.com/microsoft/winget-pkgs/pull/471488) in the winget community
+repository:
+
+```powershell
+winget install Zacess.Profile
+```
+
+To build from a clone instead:
 
 ```sh
 git clone https://github.com/zacesshq/profile.git

@@ -7,6 +7,8 @@ Every notable change to Zacess Profile is listed here. The format follows
 
 ## [Unreleased]
 
+## [0.1.0] - 2026-11-05
+
 ### Added
 
 - The `zprf` command, built from the `zacess-profile` crate, with a minimum supported Rust of 1.88.
@@ -24,3 +26,10 @@ Every notable change to Zacess Profile is listed here. The format follows
 - The eight Zacess themes as starter profiles.
 - Unit tests on the colour maths, an integration test over every shipped profile, a snapshot per
   target and CI on Ubuntu and macOS.
+
+### Changed
+
+- Routine tidy-up.
+
+[Unreleased]: https://github.com/zacesshq/profile/compare/v0.1.0...HEAD
+[0.1.0]: https://github.com/zacesshq/profile/releases/tag/v0.1.0

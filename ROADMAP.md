@@ -34,6 +34,12 @@ release.
   colours of five starter profiles match the Zacess themes, where errors and warnings now stay apart
   under colour vision deficiencies
 
+### In version 0.2.1
+
+- Releases that update every store by themselves: crates.io, the Homebrew tap, winget and
+  [zacess.com](https://zacess.com/profile/), which now has a page and full documentation for
+  Zacess Profile
+
 ## Next
 
 - **winget.** The first submission, `Zacess.Profile` 0.2.0, is waiting for review in

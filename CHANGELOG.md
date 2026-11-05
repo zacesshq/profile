@@ -7,6 +7,8 @@ Every notable change to Zacess Profile is listed here. The format follows
 
 ## [Unreleased]
 
+## [0.2.1] - 2026-11-05
+
 ### Added
 
 - The release workflow now updates every store by itself once each platform's files are attached.
@@ -16,6 +18,11 @@ Every notable change to Zacess Profile is listed here. The format follows
   release. winget submissions start from the version after 0.2.0, once that first one is accepted.
 - crates.io version and download badges in the README. The install section now lists Cargo,
   Homebrew and winget, with winget marked as pending review.
+
+### Changed
+
+- The crate no longer names a person in `authors`. The repository and the licence name the
+  project.
 
 ## [0.2.0] - 2026-11-05
 
@@ -128,6 +135,7 @@ Every notable change to Zacess Profile is listed here. The format follows
 
 - Routine tidy-up.
 
-[Unreleased]: https://github.com/zacesshq/profile/compare/v0.2.0...HEAD
+[Unreleased]: https://github.com/zacesshq/profile/compare/v0.2.1...HEAD
+[0.2.1]: https://github.com/zacesshq/profile/compare/v0.2.0...v0.2.1
 [0.2.0]: https://github.com/zacesshq/profile/compare/v0.1.0...v0.2.0
 [0.1.0]: https://github.com/zacesshq/profile/releases/tag/v0.1.0

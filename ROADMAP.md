@@ -15,7 +15,7 @@ release.
 - Targets for Ghostty, kitty, WezTerm, Alacritty, tmux, Neovim and VS Code
 - The eight Zacess themes as starter profiles
 
-### Since 0.1.0, to be released as 0.2.0
+### In version 0.2.0
 
 - Colour vision checks: paired syntax roles, added and removed lines and errors and warnings must
   differ in tone and stay apart under simulated protanopia, deuteranopia and tritanopia. `derive`

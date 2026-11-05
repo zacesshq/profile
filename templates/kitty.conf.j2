@@ -1,0 +1,44 @@
+# for kitty, from the profile {{ profile.name }}
+# written by zprf; change the profile and render again rather than editing this file
+# load it from kitty.conf with: include <path to this file>
+
+foreground {{ c.foreground }}
+background {{ c.background }}
+selection_foreground {{ c.selection_foreground }}
+selection_background {{ c.selection_background }}
+cursor {{ c.cursor }}
+cursor_text_color {{ c.cursor_text }}
+url_color {{ c.link }}
+active_border_color {{ c.focus_ring }}
+inactive_border_color {{ c.border }}
+active_tab_foreground {{ c.accent_foreground }}
+active_tab_background {{ c.accent }}
+inactive_tab_foreground {{ c.muted }}
+inactive_tab_background {{ c.surface }}
+tab_bar_background {{ c.surface }}
+
+{% for colour in ansi %}
+color{{ loop.index0 }} {{ colour }}
+{% endfor %}
+
+{% if needs.block_cursor %}
+cursor_shape block
+# shell integration turns the cursor into a beam at every prompt unless told not to
+shell_integration no-cursor
+# a program can still ask for a beam, so it is widened too; kitty measures it in points
+cursor_beam_thickness {{ needs.cursor_width_pt }}
+{% endif %}
+{% if needs.reduce_motion %}
+cursor_blink_interval 0
+cursor_trail 0
+visual_bell_duration 0
+{% endif %}
+{% if needs.font_family %}
+font_family {{ needs.font_family }}
+{% endif %}
+{% if needs.font_size_pt %}
+font_size {{ needs.font_size_pt }}
+{% endif %}
+{% if needs.cell_height_percent %}
+modify_font cell_height {{ needs.cell_height_percent }}%
+{% endif %}

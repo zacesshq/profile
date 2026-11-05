@@ -1,0 +1,75 @@
+# the Zacess Light theme as a profile, one of the eight starter profiles
+# colours from the Zacess themes palette 0.12.0
+
+spec_version = 1
+name = "Zacess Light"
+id = "zacess-light"
+description = "Ink on white, the reader's Dark on light theme."
+appearance = "light"
+
+[needs]
+reduce_motion = true
+cursor_size = "standard"
+focus_ring_width_px = 2
+
+[needs.contrast]
+text = 7.0
+non_text = 3.0
+overlay = 4.5
+terminal = 7.0
+terminal_dim = 4.5
+highlight_distance = 0.08
+
+[needs.font]
+family = "Atkinson Hyperlegible Mono"
+fallback = "monospace"
+size_pt = 14
+
+[palette]
+background = "#ffffff"
+foreground = "#111111"
+surface = "#f4f4f4"
+muted = "#424242"
+border = "#707070"
+accent = "#0049a3"
+accent_foreground = "#ffffff"
+link = "#0049a3"
+focus_ring = "#0049a3"
+cursor = "#111111"
+cursor_text = "#ffffff"
+selection_background = "#0150b2"
+selection_foreground = "#ffffff"
+selection_soft = "#9bc3ff"
+line_highlight = "#d6dde8"
+error = "#810005"
+warning = "#583600"
+info = "#003a84"
+
+[palette.syntax]
+keyword = "#59029f"
+control = "#5e003c"
+function = "#0049a3"
+type = "#003737"
+variable = "#111111"
+parameter = "#4c2300"
+property = "#030075"
+string = "#004a0e"
+number = "#4c1b00"
+comment = "#97016b"
+operator = "#111111"
+tag = "#59029f"
+attribute = "#412300"
+regex = "#5b0020"
+invalid = "#5d0002"
+added = "#005b14"
+removed = "#5d0002"
+changed = "#001940"
+
+[palette.terminal]
+ansi = [
+    "#111111", "#ca010e", "#01751c", "#885a00",
+    "#005fcc", "#b301ae", "#026f6f", "#484848",
+    "#4d4d4d", "#e90112", "#008722", "#9d6902",
+    "#006eed", "#cf01c7", "#028181", "#111111",
+]
+dim = [1, 2, 3, 4, 5, 6, 9, 10, 11, 12, 13, 14]

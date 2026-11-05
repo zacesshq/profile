@@ -1,0 +1,44 @@
+# for Alacritty, from the profile Warm dark, large text
+# written by zprf; change the profile and render again rather than editing this file
+# load it from alacritty.toml with: [general] import = ["<path to this file>"]
+
+[colors.primary]
+background = "#1b1612"
+foreground = "#ffffff"
+
+[colors.cursor]
+cursor = "#debb00"
+text = "#1b1612"
+
+[colors.selection]
+background = "#b98ffd"
+text = "#1b1612"
+
+[colors.normal]
+black = "#1b1612"
+red = "#ff7d6c"
+green = "#57b84e"
+yellow = "#b9a400"
+blue = "#71a3ff"
+magenta = "#e280e0"
+cyan = "#00b6b6"
+white = "#bbbbbb"
+
+[colors.bright]
+black = "#a4a4a4"
+red = "#ffa294"
+green = "#6fd066"
+yellow = "#d2bb00"
+blue = "#95bbff"
+magenta = "#fb97f8"
+cyan = "#00cfcf"
+white = "#ffffff"
+
+[cursor.style]
+shape = "Block"
+blinking = "Never"
+
+[font]
+size = 18.0
+offset = { x = 0, y = 7 }
+normal = { family = "Atkinson Hyperlegible Mono" }

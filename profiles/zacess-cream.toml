@@ -1,0 +1,75 @@
+# the Zacess Cream theme as a profile, one of the eight starter profiles
+# colours from the Zacess themes palette 0.12.0
+
+spec_version = 1
+name = "Zacess Cream"
+id = "zacess-cream"
+description = "Black on cream for dyslexia, the reader's Black on cream theme."
+appearance = "light"
+
+[needs]
+reduce_motion = true
+cursor_size = "standard"
+focus_ring_width_px = 2
+
+[needs.contrast]
+text = 7.0
+non_text = 3.0
+overlay = 4.5
+terminal = 7.0
+terminal_dim = 4.5
+highlight_distance = 0.08
+
+[needs.font]
+family = "Atkinson Hyperlegible Mono"
+fallback = "monospace"
+size_pt = 14
+
+[palette]
+background = "#fdf6e3"
+foreground = "#000000"
+surface = "#f2efe9"
+muted = "#3f382c"
+border = "#6e6555"
+accent = "#004498"
+accent_foreground = "#ffffff"
+link = "#004498"
+focus_ring = "#004498"
+cursor = "#000000"
+cursor_text = "#fdf6e3"
+selection_background = "#7401ca"
+selection_foreground = "#fdf6e3"
+selection_soft = "#c8a9ff"
+line_highlight = "#c8dadd"
+error = "#770004"
+warning = "#513100"
+info = "#00357a"
+
+[palette.syntax]
+keyword = "#530093"
+control = "#550036"
+function = "#004498"
+type = "#003232"
+variable = "#000000"
+parameter = "#441f00"
+property = "#020068"
+string = "#00440c"
+number = "#451700"
+comment = "#8b0162"
+operator = "#000000"
+tag = "#530093"
+attribute = "#3a1f00"
+regex = "#52001c"
+invalid = "#540002"
+added = "#005512"
+removed = "#540002"
+changed = "#001538"
+
+[palette.terminal]
+ansi = [
+    "#000000", "#c1000a", "#016f1b", "#815601",
+    "#015ac2", "#a901a6", "#016969", "#434343",
+    "#484848", "#df0010", "#008120", "#966501",
+    "#0069e3", "#c500bf", "#027b7b", "#000000",
+]
+dim = [1, 2, 3, 4, 5, 6, 9, 10, 11, 12, 13, 14]

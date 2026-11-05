@@ -1,0 +1,21 @@
+# a profile that states needs and one colour; derive fills in the rest of the palette
+
+spec_version = 1
+name = "Warm dark, large text"
+
+[needs]
+reduce_motion = true
+cursor_size = "large"
+line_spacing = 1.3
+column_width = 80
+
+[needs.contrast]
+text = 7.0
+
+[needs.font]
+family = "Atkinson Hyperlegible Mono"
+fallback = "monospace"
+size_pt = 18
+
+[palette]
+background = "#1b1612"

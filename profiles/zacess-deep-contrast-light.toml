@@ -1,0 +1,75 @@
+# the Zacess Deep Contrast Light theme as a profile, one of the eight starter profiles
+# colours from the Zacess themes palette 0.12.0
+
+spec_version = 1
+name = "Zacess Deep Contrast Light"
+id = "zacess-deep-contrast-light"
+description = "Black on white with vivid deep colours, red focus outlines and navy frames, for low vision."
+appearance = "light"
+
+[needs]
+reduce_motion = true
+cursor_size = "standard"
+focus_ring_width_px = 2
+
+[needs.contrast]
+text = 7.0
+non_text = 3.0
+overlay = 4.5
+terminal = 7.0
+terminal_dim = 4.5
+highlight_distance = 0.08
+
+[needs.font]
+family = "Atkinson Hyperlegible Mono"
+fallback = "monospace"
+size_pt = 14
+
+[palette]
+background = "#ffffff"
+foreground = "#000000"
+surface = "#ffffff"
+muted = "#4d4d4d"
+border = "#0f4a85"
+accent = "#0f4a85"
+accent_foreground = "#ffffff"
+link = "#003df6"
+focus_ring = "#b5200d"
+cursor = "#000000"
+cursor_text = "#ffffff"
+selection_background = "#990098"
+selection_foreground = "#ffffff"
+selection_soft = "#ffbcfa"
+line_highlight = "#c8debd"
+error = "#aa0000"
+warning = "#674100"
+info = "#002ec2"
+
+[palette.syntax]
+keyword = "#002ec2"
+control = "#950094"
+function = "#824100"
+type = "#003a39"
+variable = "#000000"
+parameter = "#000000"
+property = "#2e0078"
+string = "#870000"
+number = "#a3005f"
+comment = "#006108"
+operator = "#000000"
+tag = "#002ec2"
+attribute = "#2e0078"
+regex = "#a60049"
+invalid = "#aa0000"
+added = "#006108"
+removed = "#730000"
+changed = "#002ec2"
+
+[palette.terminal]
+ansi = [
+    "#000000", "#ca0000", "#00892e", "#ad6500",
+    "#0040ff", "#cd01cd", "#016e78", "#595959",
+    "#404040", "#d14100", "#00884f", "#907300",
+    "#0d00ff", "#db009a", "#0178c1", "#000000",
+]
+dim = [1, 2, 3, 4, 5, 6, 9, 10, 11, 12, 13, 14]

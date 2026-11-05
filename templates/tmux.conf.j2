@@ -1,0 +1,18 @@
+# for tmux, from the profile {{ profile.name }}
+# written by zprf; change the profile and render again rather than editing this file
+# load it from tmux.conf with: source-file <path to this file>
+
+set -g status-style "fg={{ c.foreground }},bg={{ c.surface }}"
+set -g window-status-style "fg={{ c.muted }},bg={{ c.surface }}"
+set -g window-status-current-style "fg={{ c.accent_foreground }},bg={{ c.accent }},bold"
+set -g pane-border-style "fg={{ c.border }}"
+set -g pane-active-border-style "fg={{ c.focus_ring }}"
+set -g message-style "fg={{ c.foreground }},bg={{ c.surface }}"
+set -g message-command-style "fg={{ c.foreground }},bg={{ c.surface }}"
+set -g mode-style "fg={{ c.selection_foreground }},bg={{ c.selection_background }}"
+set -g display-panes-colour "{{ c.border }}"
+set -g display-panes-active-colour "{{ c.focus_ring }}"
+set -g clock-mode-colour "{{ c.accent }}"
+{% if needs.reduce_motion %}
+set -g visual-bell off
+{% endif %}

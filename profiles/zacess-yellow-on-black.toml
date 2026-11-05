@@ -1,0 +1,74 @@
+# the Zacess Yellow on Black theme as a profile, one of the eight starter profiles
+# colours from the Zacess themes palette 0.12.0
+
+spec_version = 1
+name = "Zacess Yellow on Black"
+id = "zacess-yellow-on-black"
+description = "Yellow on black for low vision, the reader's Yellow on black theme."
+appearance = "dark"
+
+[needs]
+reduce_motion = true
+cursor_size = "standard"
+focus_ring_width_px = 2
+
+[needs.contrast]
+text = 7.0
+non_text = 3.0
+overlay = 4.5
+terminal = 7.0
+terminal_dim = 4.5
+highlight_distance = 0.08
+
+[needs.font]
+family = "Atkinson Hyperlegible Mono"
+fallback = "monospace"
+size_pt = 14
+
+[palette]
+background = "#000000"
+foreground = "#ffeb3b"
+surface = "#000000"
+muted = "#e6e6e6"
+border = "#7a7a7a"
+accent = "#ffeb3b"
+accent_foreground = "#000000"
+link = "#1be4ed"
+focus_ring = "#ffeb3b"
+cursor = "#ffeb3b"
+cursor_text = "#000000"
+selection_background = "#09bcc4"
+selection_foreground = "#000000"
+selection_soft = "#024b4e"
+line_highlight = "#262626"
+error = "#ffbeb5"
+warning = "#ffd8ab"
+info = "#a6d2ff"
+
+[palette.syntax]
+keyword = "#ffffff"
+control = "#0cedf6"
+function = "#88c3ff"
+type = "#e5c7ff"
+variable = "#ffeb3b"
+parameter = "#ffcca3"
+property = "#ffffff"
+string = "#43f480"
+number = "#ffa77e"
+comment = "#88c200"
+operator = "#ffeb3b"
+tag = "#ffffff"
+attribute = "#ffffff"
+regex = "#ffa1ce"
+invalid = "#ffa59d"
+added = "#28f74f"
+removed = "#ffa59d"
+changed = "#ddedff"
+
+[palette.terminal]
+ansi = [
+    "#a3a3a3", "#ffa79b", "#01dc3f", "#edb618",
+    "#90c1ff", "#fd9cf8", "#1fd3d3", "#d9d9d9",
+    "#c8c8c8", "#ffd5ce", "#3cff5d", "#ffda8a",
+    "#c9e0ff", "#ffd0fa", "#00f7f5", "#ffffff",
+]

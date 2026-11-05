@@ -1,0 +1,75 @@
+name: Bug report
+description: The tool fails, gives a wrong ratio or writes a file an app will not load.
+labels: ["bug"]
+body:
+  - type: dropdown
+    id: command
+    attributes:
+      label: Command
+      options:
+        - check
+        - derive
+        - render
+        - apply --live
+        - list-targets
+    validations:
+      required: true
+  - type: dropdown
+    id: target
+    attributes:
+      label: Target, if the problem is in a rendered file
+      options:
+        - Not about a rendered file
+        - Ghostty
+        - kitty
+        - WezTerm
+        - Alacritty
+        - tmux
+        - Neovim
+        - VS Code
+    validations:
+      required: true
+  - type: textarea
+    id: what-happened
+    attributes:
+      label: What happened
+      description: What you saw, including the full output. `check --verbose` output helps.
+      render: text
+    validations:
+      required: true
+  - type: textarea
+    id: expected
+    attributes:
+      label: What you expected
+    validations:
+      required: true
+  - type: textarea
+    id: profile
+    attributes:
+      label: The profile
+      description: The profile file or the smallest one that shows the problem. Leave out anything personal.
+      render: toml
+  - type: input
+    id: version
+    attributes:
+      label: Versions
+      placeholder: zprf 0.1.0 on macOS 26, Ghostty 1.3
+  - type: dropdown
+    id: ai-use
+    attributes:
+      label: AI use
+      description: "Required. Did AI help you find, test or check this? Write the title and description yourself either way. See the [AI policy](https://github.com/zacesshq/.github/blob/main/AI_POLICY.md). Dictation, translation and spelling tools do not count."
+      options:
+        - No AI was used
+        - "Yes: AI helped me find, test or check it"
+    validations:
+      required: true
+  - type: checkboxes
+    id: checks
+    attributes:
+      label: Before submitting
+      options:
+        - label: I searched existing issues for this problem.
+          required: true
+        - label: I have read the [Code of Conduct](https://github.com/zacesshq/profile/blob/main/CODE_OF_CONDUCT.md).
+          required: true

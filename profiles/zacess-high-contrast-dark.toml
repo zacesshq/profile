@@ -1,0 +1,74 @@
+# the Zacess High Contrast Dark theme as a profile, one of the eight starter profiles
+# colours from the Zacess themes palette 0.12.0
+
+spec_version = 1
+name = "Zacess High Contrast Dark"
+id = "zacess-high-contrast-dark"
+description = "White on black with strong borders and a yellow focus ring, for the highest contrast on a dark screen."
+appearance = "dark"
+
+[needs]
+reduce_motion = true
+cursor_size = "standard"
+focus_ring_width_px = 2
+
+[needs.contrast]
+text = 7.0
+non_text = 3.0
+overlay = 4.5
+terminal = 7.0
+terminal_dim = 4.5
+highlight_distance = 0.08
+
+[needs.font]
+family = "Atkinson Hyperlegible Mono"
+fallback = "monospace"
+size_pt = 14
+
+[palette]
+background = "#000000"
+foreground = "#ffffff"
+surface = "#000000"
+muted = "#e0e0e0"
+border = "#a6a6a6"
+accent = "#f5c400"
+accent_foreground = "#000000"
+link = "#8fd0ff"
+focus_ring = "#f5c400"
+cursor = "#f5c400"
+cursor_text = "#000000"
+selection_background = "#bf96ff"
+selection_foreground = "#000000"
+selection_soft = "#6501ae"
+line_highlight = "#262626"
+error = "#ff9e94"
+warning = "#ffd28a"
+info = "#a9d4ff"
+
+[palette.syntax]
+keyword = "#f5c400"
+control = "#ffcdf0"
+function = "#8fd0ff"
+type = "#00f4e0"
+variable = "#ffffff"
+parameter = "#ffcf9e"
+property = "#c9a8ff"
+string = "#20fe34"
+number = "#ffb27a"
+comment = "#c7b404"
+operator = "#ffffff"
+tag = "#f5c400"
+attribute = "#fff0b8"
+regex = "#ffa6c9"
+invalid = "#ff9e94"
+added = "#3bff59"
+removed = "#ffaba3"
+changed = "#e6f2ff"
+
+[palette.terminal]
+ansi = [
+    "#b3b3b3", "#ff9e94", "#26f444", "#f5c400",
+    "#8fd0ff", "#f2a6ff", "#00f4e0", "#e0e0e0",
+    "#cccccc", "#ffc4bd", "#95ff98", "#ffe08a",
+    "#c8e6ff", "#ffcdf7", "#56fff3", "#ffffff",
+]

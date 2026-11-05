@@ -1,0 +1,75 @@
+# the Zacess High Contrast Light theme as a profile, one of the eight starter profiles
+# colours from the Zacess themes palette 0.12.0
+
+spec_version = 1
+name = "Zacess High Contrast Light"
+id = "zacess-high-contrast-light"
+description = "Black on white with strong dark borders and focus outlines, for the highest contrast on a light screen."
+appearance = "light"
+
+[needs]
+reduce_motion = true
+cursor_size = "standard"
+focus_ring_width_px = 2
+
+[needs.contrast]
+text = 7.0
+non_text = 3.0
+overlay = 4.5
+terminal = 7.0
+terminal_dim = 4.5
+highlight_distance = 0.08
+
+[needs.font]
+family = "Atkinson Hyperlegible Mono"
+fallback = "monospace"
+size_pt = 14
+
+[palette]
+background = "#ffffff"
+foreground = "#000000"
+surface = "#f7f7f7"
+muted = "#2e2e2e"
+border = "#262626"
+accent = "#003d99"
+accent_foreground = "#ffffff"
+link = "#003d99"
+focus_ring = "#003d99"
+cursor = "#000000"
+cursor_text = "#ffffff"
+selection_background = "#015f5e"
+selection_foreground = "#ffffff"
+selection_soft = "#00d3d0"
+line_highlight = "#c3e5fe"
+error = "#8b0000"
+warning = "#5a3a00"
+info = "#00337f"
+
+[palette.syntax]
+keyword = "#4b0091"
+control = "#8a0046"
+function = "#00347f"
+type = "#004f4e"
+variable = "#000000"
+parameter = "#6b3100"
+property = "#1e0090"
+string = "#005518"
+number = "#521e00"
+comment = "#1701fb"
+operator = "#000000"
+tag = "#4b0091"
+attribute = "#4f3200"
+regex = "#720030"
+invalid = "#600000"
+added = "#005518"
+removed = "#4a0000"
+changed = "#00307a"
+
+[palette.terminal]
+ansi = [
+    "#000000", "#ca0000", "#017424", "#875b00",
+    "#005bdc", "#b400ac", "#006f6e", "#3d3d3d",
+    "#333333", "#e90100", "#018726", "#9c6a01",
+    "#016eee", "#cf00c6", "#028181", "#000000",
+]
+dim = [1, 2, 3, 4, 5, 6, 9, 10, 11, 12, 13, 14]

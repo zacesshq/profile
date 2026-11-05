@@ -1,0 +1,36 @@
+# for Ghostty, from the profile Warm dark, large text
+# written by zprf; change the profile and render again rather than editing this file
+# load it from the main config with: config-file = <path to this file>
+
+palette = 0=#1b1612
+palette = 1=#ff7d6c
+palette = 2=#57b84e
+palette = 3=#b9a400
+palette = 4=#71a3ff
+palette = 5=#e280e0
+palette = 6=#00b6b6
+palette = 7=#bbbbbb
+palette = 8=#a4a4a4
+palette = 9=#ffa294
+palette = 10=#6fd066
+palette = 11=#d2bb00
+palette = 12=#95bbff
+palette = 13=#fb97f8
+palette = 14=#00cfcf
+palette = 15=#ffffff
+background = #1b1612
+foreground = #ffffff
+cursor-color = #debb00
+cursor-text = #1b1612
+selection-background = #b98ffd
+selection-foreground = #1b1612
+
+# Ghostty lifts any program's own colour pair to this ratio, so the profile's floor holds there too
+minimum-contrast = 7.0
+cursor-style = block
+# shell integration turns the cursor back into a bar at every prompt unless told not to
+shell-integration-features = no-cursor
+cursor-style-blink = false
+font-family = "Atkinson Hyperlegible Mono"
+font-size = 18.0
+adjust-cell-height = 30%

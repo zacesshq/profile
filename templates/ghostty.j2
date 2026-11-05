@@ -1,0 +1,33 @@
+# for Ghostty, from the profile {{ profile.name }}
+# written by zprf; change the profile and render again rather than editing this file
+# load it from the main config with: config-file = <path to this file>
+
+{% for colour in ansi %}
+palette = {{ loop.index0 }}={{ colour }}
+{% endfor %}
+background = {{ c.background }}
+foreground = {{ c.foreground }}
+cursor-color = {{ c.cursor }}
+cursor-text = {{ c.cursor_text }}
+selection-background = {{ c.selection_background }}
+selection-foreground = {{ c.selection_foreground }}
+
+# Ghostty lifts any program's own colour pair to this ratio, so the profile's floor holds there too
+minimum-contrast = {{ needs.contrast }}
+{% if needs.block_cursor %}
+cursor-style = block
+# shell integration turns the cursor back into a bar at every prompt unless told not to
+shell-integration-features = no-cursor
+{% endif %}
+{% if needs.reduce_motion %}
+cursor-style-blink = false
+{% endif %}
+{% if needs.font_family %}
+font-family = "{{ needs.font_family }}"
+{% endif %}
+{% if needs.font_size_pt %}
+font-size = {{ needs.font_size_pt }}
+{% endif %}
+{% if needs.cell_height_percent %}
+adjust-cell-height = {{ needs.cell_height_percent - 100 }}%
+{% endif %}

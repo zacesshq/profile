@@ -1,0 +1,49 @@
+name: New target
+description: Ask for an app to be supported by render.
+labels: ["enhancement"]
+body:
+  - type: input
+    id: app
+    attributes:
+      label: App
+      placeholder: Helix
+    validations:
+      required: true
+  - type: input
+    id: format
+    attributes:
+      label: Config format and documentation link
+      description: Where the app's theme and settings format is documented.
+      placeholder: TOML, https://docs.helix-editor.com/themes.html
+    validations:
+      required: true
+  - type: textarea
+    id: needs
+    attributes:
+      label: Needs the app has settings for
+      description: Which of font, size, line spacing, cursor size, reduced motion and line length the app can set, with the setting names if you know them.
+  - type: dropdown
+    id: ai-use
+    attributes:
+      label: AI use
+      description: "Required. Did AI help you find, test or check this? Write the title and description yourself either way. See the [AI policy](https://github.com/zacesshq/.github/blob/main/AI_POLICY.md). Dictation, translation and spelling tools do not count."
+      options:
+        - No AI was used
+        - "Yes: AI helped me find, test or check it"
+    validations:
+      required: true
+  - type: checkboxes
+    id: help
+    attributes:
+      label: Contributing
+      options:
+        - label: I would like to write the template myself.
+  - type: checkboxes
+    id: checks
+    attributes:
+      label: Before submitting
+      options:
+        - label: I searched existing issues for this app.
+          required: true
+        - label: I have read the [Code of Conduct](https://github.com/zacesshq/profile/blob/main/CODE_OF_CONDUCT.md).
+          required: true

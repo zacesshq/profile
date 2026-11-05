@@ -1,0 +1,135 @@
+{% set scopes = {
+  "keyword": ["keyword", "storage.type", "storage.modifier"],
+  "control": ["keyword.control"],
+  "function": ["entity.name.function", "support.function", "meta.function-call.generic"],
+  "type": ["entity.name.type", "entity.name.class", "support.type", "support.class"],
+  "variable": ["variable", "variable.other.readwrite"],
+  "parameter": ["variable.parameter"],
+  "property": ["variable.other.property", "variable.other.object.property", "support.type.property-name", "meta.object-literal.key"],
+  "string": ["string"],
+  "number": ["constant.numeric", "constant.language"],
+  "comment": ["comment", "punctuation.definition.comment"],
+  "operator": ["keyword.operator", "punctuation"],
+  "tag": ["entity.name.tag"],
+  "attribute": ["entity.other.attribute-name"],
+  "regex": ["string.regexp", "constant.character.escape"],
+  "invalid": ["invalid"],
+  "added": ["markup.inserted"],
+  "removed": ["markup.deleted"],
+  "changed": ["markup.changed"],
+} %}
+{% set names = ["Black", "Red", "Green", "Yellow", "Blue", "Magenta", "Cyan", "White"] %}
+{
+  "workbench.colorCustomizations": {
+    "editor.background": "{{ c.background }}",
+    "editor.foreground": "{{ c.foreground }}",
+    "editorCursor.foreground": "{{ c.cursor }}",
+    "editorCursor.background": "{{ c.cursor_text }}",
+    "editor.selectionBackground": "{{ c.selection_soft }}",
+    "editor.inactiveSelectionBackground": "{{ c.selection_soft }}",
+    "editor.lineHighlightBackground": "{{ c.line_highlight }}",
+    "editorLineNumber.foreground": "{{ c.muted }}",
+    "editorLineNumber.activeForeground": "{{ c.foreground }}",
+    "editorWidget.background": "{{ c.surface }}",
+    "editorWidget.foreground": "{{ c.foreground }}",
+    "editorWidget.border": "{{ c.border }}",
+    "editorGroup.border": "{{ c.border }}",
+    "editorError.foreground": "{{ c.error }}",
+    "editorWarning.foreground": "{{ c.warning }}",
+    "editorInfo.foreground": "{{ c.info }}",
+    "focusBorder": "{{ c.focus_ring }}",
+    "foreground": "{{ c.foreground }}",
+    "descriptionForeground": "{{ c.muted }}",
+    "errorForeground": "{{ c.error }}",
+    "textLink.foreground": "{{ c.link }}",
+    "textLink.activeForeground": "{{ c.link }}",
+    "button.background": "{{ c.accent }}",
+    "button.foreground": "{{ c.accent_foreground }}",
+    "input.background": "{{ c.surface }}",
+    "input.foreground": "{{ c.foreground }}",
+    "input.border": "{{ c.border }}",
+    "list.activeSelectionBackground": "{{ c.selection_background }}",
+    "list.activeSelectionForeground": "{{ c.selection_foreground }}",
+    "list.inactiveSelectionBackground": "{{ c.selection_soft }}",
+    "list.inactiveSelectionForeground": "{{ c.foreground }}",
+    "activityBar.background": "{{ c.surface }}",
+    "activityBar.foreground": "{{ c.foreground }}",
+    "activityBar.inactiveForeground": "{{ c.muted }}",
+    "activityBar.border": "{{ c.border }}",
+    "sideBar.background": "{{ c.surface }}",
+    "sideBar.foreground": "{{ c.foreground }}",
+    "sideBar.border": "{{ c.border }}",
+    "statusBar.background": "{{ c.surface }}",
+    "statusBar.foreground": "{{ c.foreground }}",
+    "statusBar.border": "{{ c.border }}",
+    "titleBar.activeBackground": "{{ c.surface }}",
+    "titleBar.activeForeground": "{{ c.foreground }}",
+    "tab.activeBackground": "{{ c.background }}",
+    "tab.activeForeground": "{{ c.foreground }}",
+    "tab.activeBorderTop": "{{ c.focus_ring }}",
+    "tab.inactiveBackground": "{{ c.surface }}",
+    "tab.inactiveForeground": "{{ c.muted }}",
+    "tab.border": "{{ c.border }}",
+    "panel.background": "{{ c.background }}",
+    "panel.border": "{{ c.border }}",
+    "gitDecoration.addedResourceForeground": "{{ syntax.added }}",
+    "gitDecoration.deletedResourceForeground": "{{ syntax.removed }}",
+    "gitDecoration.modifiedResourceForeground": "{{ syntax.changed }}",
+    "terminal.background": "{{ c.background }}",
+    "terminal.foreground": "{{ c.foreground }}",
+    "terminalCursor.foreground": "{{ c.cursor }}",
+    "terminalCursor.background": "{{ c.cursor_text }}",
+    "terminal.selectionBackground": "{{ c.selection_background }}",
+    "terminal.selectionForeground": "{{ c.selection_foreground }}",
+{% for name in names %}
+    "terminal.ansi{{ name }}": "{{ ansi[loop.index0] }}",
+{% endfor %}
+{% for name in names %}
+    "terminal.ansiBright{{ name }}": "{{ ansi[loop.index0 + 8] }}"{{ "," if not loop.last }}
+{% endfor %}
+  },
+  "editor.tokenColorCustomizations": {
+    "textMateRules": [
+{% for role, colour in syntax|items %}
+      {
+        "name": "{{ role }}",
+        "scope": {{ scopes[role]|tojson }},
+        "settings": { "foreground": "{{ colour }}", "fontStyle": "{{ styles[role]|join(" ") }}" }
+      }{{ "," if not loop.last }}
+{% endfor %}
+    ]
+  },
+{% if needs.font_family %}
+  "editor.fontFamily": {{ needs.font_family|tojson }},
+  "terminal.integrated.fontFamily": {{ needs.font_family|tojson }},
+{% endif %}
+{% if needs.font_size_px %}
+  "editor.fontSize": {{ needs.font_size_px }},
+  "terminal.integrated.fontSize": {{ needs.font_size_px }},
+{% endif %}
+{% if needs.line_spacing %}
+  "editor.lineHeight": {{ needs.line_spacing }},
+  "terminal.integrated.lineHeight": {{ needs.line_spacing }},
+{% endif %}
+{% if needs.letter_spacing_px %}
+  "editor.letterSpacing": {{ needs.letter_spacing_px }},
+  "terminal.integrated.letterSpacing": {{ needs.letter_spacing_px }},
+{% endif %}
+{% if needs.column_width %}
+  "editor.rulers": [{{ needs.column_width }}],
+{% endif %}
+{% if needs.reduce_motion %}
+  "workbench.reduceMotion": "on",
+  "editor.cursorBlinking": "solid",
+  "editor.cursorSmoothCaretAnimation": "off",
+  "editor.smoothScrolling": false,
+  "workbench.list.smoothScrolling": false,
+  "terminal.integrated.smoothScrolling": false,
+  "terminal.integrated.cursorBlinking": false,
+{% endif %}
+{% if needs.block_cursor %}
+  "editor.cursorStyle": "block",
+  "editor.cursorWidth": {{ needs.cursor_width_px }},
+{% endif %}
+  "terminal.integrated.minimumContrastRatio": {{ needs.contrast }}
+}

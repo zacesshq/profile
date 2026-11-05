@@ -1,0 +1,42 @@
+# for Alacritty, from the profile Zacess Deep Contrast Dark
+# written by zprf; change the profile and render again rather than editing this file
+# load it from alacritty.toml with: [general] import = ["<path to this file>"]
+
+[colors.primary]
+background = "#000000"
+foreground = "#ffffff"
+
+[colors.cursor]
+cursor = "#ffff00"
+text = "#000000"
+
+[colors.selection]
+background = "#ff70ff"
+text = "#000000"
+
+[colors.normal]
+black = "#000000"
+red = "#ff5f5f"
+green = "#00cd00"
+yellow = "#cdcd00"
+blue = "#8888ff"
+magenta = "#ff2aff"
+cyan = "#00cdcd"
+white = "#e5e5e5"
+
+[colors.bright]
+black = "#b8b8b8"
+red = "#ff9e9e"
+green = "#00ff00"
+yellow = "#ffff00"
+blue = "#b0b0ff"
+magenta = "#ff8fff"
+cyan = "#00ffff"
+white = "#ffffff"
+
+[cursor.style]
+blinking = "Never"
+
+[font]
+size = 14.0
+normal = { family = "Atkinson Hyperlegible Mono" }

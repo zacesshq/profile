@@ -1,0 +1,155 @@
+-- for Neovim, from the profile {{ profile.name }}
+-- written by zprf; change the profile and render again rather than editing this file
+-- put this file in a colors folder on the runtimepath, then: colorscheme {{ profile.id }}
+{% macro st(role) %}{% for s in styles[role] %}, {{ s }} = true{% endfor %}{% endmacro %}
+
+vim.cmd("highlight clear")
+if vim.fn.exists("syntax_on") == 1 then
+  vim.cmd("syntax reset")
+end
+vim.o.background = "{{ profile.appearance }}"
+vim.o.termguicolors = true
+vim.g.colors_name = "{{ profile.id }}"
+
+local c = {
+{% for role, colour in c|items %}
+  {{ role }} = "{{ colour }}",
+{% endfor %}
+}
+
+local s = {
+{% for role, colour in syntax|items %}
+  {{ "[\"function\"]" if role == "function" else role }} = "{{ colour }}",
+{% endfor %}
+}
+
+local function hi(group, spec)
+  vim.api.nvim_set_hl(0, group, spec)
+end
+
+-- interface
+hi("Normal", { fg = c.foreground, bg = c.background })
+hi("NormalNC", { fg = c.foreground, bg = c.background })
+hi("NormalFloat", { fg = c.foreground, bg = c.surface })
+hi("FloatBorder", { fg = c.border, bg = c.surface })
+hi("Cursor", { fg = c.cursor_text, bg = c.cursor })
+hi("TermCursor", { fg = c.cursor_text, bg = c.cursor })
+hi("CursorLine", { bg = c.line_highlight })
+hi("CursorColumn", { bg = c.line_highlight })
+hi("ColorColumn", { bg = c.line_highlight })
+hi("LineNr", { fg = c.muted })
+hi("CursorLineNr", { fg = c.foreground, bold = true })
+hi("SignColumn", { fg = c.muted, bg = c.background })
+hi("Visual", { fg = c.selection_foreground, bg = c.selection_background })
+hi("Search", { fg = c.foreground, bg = c.selection_soft, underline = true })
+hi("CurSearch", { fg = c.accent_foreground, bg = c.accent, bold = true })
+hi("IncSearch", { fg = c.accent_foreground, bg = c.accent, bold = true })
+hi("MatchParen", { fg = c.accent, bold = true, underline = true })
+hi("StatusLine", { fg = c.foreground, bg = c.surface, bold = true })
+hi("StatusLineNC", { fg = c.muted, bg = c.surface })
+hi("TabLine", { fg = c.muted, bg = c.surface })
+hi("TabLineSel", { fg = c.accent_foreground, bg = c.accent, bold = true })
+hi("TabLineFill", { bg = c.surface })
+hi("WinSeparator", { fg = c.border })
+hi("Pmenu", { fg = c.foreground, bg = c.surface })
+hi("PmenuSel", { fg = c.selection_foreground, bg = c.selection_background, bold = true })
+hi("PmenuThumb", { bg = c.border })
+hi("NonText", { fg = c.muted })
+hi("Whitespace", { fg = c.muted })
+hi("Folded", { fg = c.muted, bg = c.surface, italic = true })
+hi("Directory", { fg = s["function"] })
+hi("Title", { fg = s.keyword, bold = true })
+hi("Underlined", { fg = c.link, underline = true })
+hi("ErrorMsg", { fg = c.error, bold = true })
+hi("WarningMsg", { fg = c.warning, bold = true })
+hi("MoreMsg", { fg = c.info })
+hi("Question", { fg = c.info })
+
+-- syntax, with the font styles that keep each role readable without colour
+hi("Comment", { fg = s.comment{{ st("comment") }} })
+hi("Keyword", { fg = s.keyword{{ st("keyword") }} })
+hi("Statement", { fg = s.keyword{{ st("keyword") }} })
+hi("StorageClass", { fg = s.keyword{{ st("keyword") }} })
+hi("Conditional", { fg = s.control{{ st("control") }} })
+hi("Repeat", { fg = s.control{{ st("control") }} })
+hi("Exception", { fg = s.control{{ st("control") }} })
+hi("Include", { fg = s.control{{ st("control") }} })
+hi("Function", { fg = s["function"]{{ st("function") }} })
+hi("Type", { fg = s["type"]{{ st("type") }} })
+hi("Identifier", { fg = s.variable{{ st("variable") }} })
+hi("String", { fg = s.string{{ st("string") }} })
+hi("Character", { fg = s.string{{ st("string") }} })
+hi("Number", { fg = s.number{{ st("number") }} })
+hi("Float", { fg = s.number{{ st("number") }} })
+hi("Boolean", { fg = s.number{{ st("number") }} })
+hi("Constant", { fg = s.number{{ st("number") }} })
+hi("Operator", { fg = s.operator{{ st("operator") }} })
+hi("Delimiter", { fg = s.operator{{ st("operator") }} })
+hi("Special", { fg = s.regex{{ st("regex") }} })
+hi("Error", { fg = s.invalid{{ st("invalid") }} })
+hi("Todo", { fg = s.comment, bold = true, italic = true })
+hi("DiffAdd", { fg = s.added })
+hi("DiffDelete", { fg = s.removed })
+hi("DiffChange", { fg = s.changed })
+hi("DiffText", { fg = s.changed, bold = true, underline = true })
+hi("Added", { fg = s.added })
+hi("Removed", { fg = s.removed })
+hi("Changed", { fg = s.changed })
+
+-- tree-sitter captures
+hi("@keyword", { link = "Keyword" })
+hi("@keyword.function", { link = "Keyword" })
+hi("@keyword.conditional", { link = "Conditional" })
+hi("@keyword.repeat", { link = "Repeat" })
+hi("@keyword.return", { link = "Conditional" })
+hi("@keyword.import", { link = "Include" })
+hi("@function", { link = "Function" })
+hi("@function.call", { link = "Function" })
+hi("@function.method", { link = "Function" })
+hi("@type", { link = "Type" })
+hi("@type.builtin", { link = "Type" })
+hi("@variable", { link = "Identifier" })
+hi("@variable.parameter", { fg = s.parameter{{ st("parameter") }} })
+hi("@property", { fg = s.property{{ st("property") }} })
+hi("@variable.member", { fg = s.property{{ st("property") }} })
+hi("@string", { link = "String" })
+hi("@string.regexp", { fg = s.regex{{ st("regex") }} })
+hi("@string.escape", { fg = s.regex{{ st("regex") }} })
+hi("@number", { link = "Number" })
+hi("@boolean", { link = "Boolean" })
+hi("@constant", { link = "Constant" })
+hi("@comment", { link = "Comment" })
+hi("@operator", { link = "Operator" })
+hi("@punctuation", { link = "Delimiter" })
+hi("@tag", { fg = s.tag{{ st("tag") }} })
+hi("@tag.attribute", { fg = s.attribute{{ st("attribute") }} })
+hi("@markup.link", { fg = c.link, underline = true })
+hi("@diff.plus", { link = "Added" })
+hi("@diff.minus", { link = "Removed" })
+hi("@diff.delta", { link = "Changed" })
+
+-- diagnostics are underlined as well as coloured, so they never rest on colour alone
+hi("DiagnosticError", { fg = c.error })
+hi("DiagnosticWarn", { fg = c.warning })
+hi("DiagnosticInfo", { fg = c.info })
+hi("DiagnosticHint", { fg = c.info })
+hi("DiagnosticUnderlineError", { sp = c.error, undercurl = true })
+hi("DiagnosticUnderlineWarn", { sp = c.warning, undercurl = true })
+hi("DiagnosticUnderlineInfo", { sp = c.info, underline = true })
+hi("DiagnosticUnderlineHint", { sp = c.info, underline = true })
+
+{% for colour in ansi %}
+vim.g.terminal_color_{{ loop.index0 }} = "{{ colour }}"
+{% endfor %}
+
+-- the profile's other needs; set vim.g.zacess_profile_options = false before loading to skip them
+if vim.g.zacess_profile_options ~= false then
+{% if needs.reduce_motion %}
+  -- removed first so loading the scheme again does not add the entry a second time
+  vim.opt.guicursor:remove("a:blinkon0")
+  vim.opt.guicursor:append("a:blinkon0")
+{% endif %}
+{% if needs.column_width %}
+  vim.opt.colorcolumn = "{{ needs.column_width + 1 }}"
+{% endif %}
+end

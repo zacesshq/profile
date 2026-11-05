@@ -1,0 +1,75 @@
+# the Zacess Deep Contrast Dark theme as a profile, one of the eight starter profiles
+# colours from the Zacess themes palette 0.12.0
+
+spec_version = 1
+name = "Zacess Deep Contrast Dark"
+id = "zacess-deep-contrast-dark"
+description = "White on black with deep, fully saturated colours, yellow focus outlines and cyan frames, for low vision."
+appearance = "dark"
+
+[needs]
+reduce_motion = true
+cursor_size = "standard"
+focus_ring_width_px = 2
+
+[needs.contrast]
+text = 7.0
+non_text = 3.0
+overlay = 4.5
+terminal = 7.0
+terminal_dim = 4.5
+highlight_distance = 0.08
+
+[needs.font]
+family = "Atkinson Hyperlegible Mono"
+fallback = "monospace"
+size_pt = 14
+
+[palette]
+background = "#000000"
+foreground = "#ffffff"
+surface = "#000000"
+muted = "#b3b3b3"
+border = "#00ffff"
+accent = "#00ffff"
+accent_foreground = "#000000"
+link = "#1db4ff"
+focus_ring = "#ffff00"
+cursor = "#ffff00"
+cursor_text = "#000000"
+selection_background = "#ff70ff"
+selection_foreground = "#000000"
+selection_soft = "#720072"
+line_highlight = "#262626"
+error = "#fe8167"
+warning = "#ffd370"
+info = "#59a4f9"
+
+[palette.syntax]
+keyword = "#67aeff"
+control = "#ffabfd"
+function = "#ffdf5a"
+type = "#00ebb1"
+variable = "#ffffff"
+parameter = "#ffffff"
+property = "#c195ff"
+string = "#ffaa7c"
+number = "#e19e00"
+comment = "#00c600"
+operator = "#ffffff"
+tag = "#67aeff"
+attribute = "#c195ff"
+regex = "#ff80c5"
+invalid = "#fd8b78"
+added = "#00f000"
+removed = "#ffaa7c"
+changed = "#67aeff"
+
+[palette.terminal]
+ansi = [
+    "#000000", "#ff5f5f", "#00cd00", "#cdcd00",
+    "#8888ff", "#ff2aff", "#00cdcd", "#e5e5e5",
+    "#b8b8b8", "#ff9e9e", "#00ff00", "#ffff00",
+    "#b0b0ff", "#ff8fff", "#00ffff", "#ffffff",
+]
+background_slots = [0]

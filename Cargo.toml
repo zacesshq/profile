@@ -1,0 +1,43 @@
+[package]
+name = "zacess-profile"
+version = "0.1.0"
+edition = "2024"
+rust-version = "1.88"
+description = "One accessibility profile for every app: state your needs once, derive a checked palette and render it for terminals and editors"
+authors = ["Isaac Adjei"]
+license = "Apache-2.0"
+repository = "https://github.com/zacesshq/profile"
+homepage = "https://zacess.com"
+readme = "README.md"
+keywords = ["accessibility", "contrast", "theme", "terminal", "wcag"]
+categories = ["accessibility", "command-line-utilities"]
+include = [
+    "src/**/*",
+    "templates/**/*",
+    "profiles/**/*",
+    "spec/**/*",
+    "README.md",
+    "CHANGELOG.md",
+    "LICENSE",
+    "NOTICE",
+]
+
+[[bin]]
+name = "zprf"
+path = "src/main.rs"
+
+[dependencies]
+anyhow = "1.0"
+clap = { version = "4.6", features = ["derive"] }
+minijinja = { version = "3.0", features = ["json", "serde"] }
+serde = { version = "1.0", features = ["derive"] }
+serde_json = "1.0"
+toml = "1.2"
+
+[dev-dependencies]
+regex = "1"
+
+[profile.release]
+lto = true
+codegen-units = 1
+strip = true

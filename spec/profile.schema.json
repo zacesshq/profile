@@ -1,0 +1,403 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://raw.githubusercontent.com/zacesshq/profile/main/spec/profile.schema.json",
+  "title": "Zacess Profile",
+  "description": "An accessibility profile: what a person needs, plus an optional palette. Spec version 1. See SPEC.md beside this file.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "spec_version",
+    "name"
+  ],
+  "if": {
+    "not": {
+      "required": [
+        "id"
+      ]
+    }
+  },
+  "then": {
+    "properties": {
+      "name": {
+        "pattern": "[A-Za-z0-9]"
+      }
+    }
+  },
+  "properties": {
+    "spec_version": {
+      "type": "integer",
+      "const": 1,
+      "description": "The spec version the profile is written to."
+    },
+    "name": {
+      "type": "string",
+      "pattern": "^[^\\u0000-\\u001F\\u007F-\\u009F]*[^\\s\\u0000-\\u001F\\u007F-\\u009F][^\\u0000-\\u001F\\u007F-\\u009F]*$",
+      "description": "The name shown to the person. One line with at least one character that is not white space and no control characters."
+    },
+    "id": {
+      "type": "string",
+      "pattern": "^[a-z0-9]+(-[a-z0-9]+)*$",
+      "description": "File name stem for rendered files. The name in lowercase with dashes when missing."
+    },
+    "description": {
+      "type": "string",
+      "description": "One sentence on who the profile is for."
+    },
+    "appearance": {
+      "enum": [
+        "dark",
+        "light"
+      ],
+      "description": "Whether the background is dark or light. Worked out from the background when missing."
+    },
+    "needs": {
+      "$ref": "#/$defs/needs"
+    },
+    "palette": {
+      "$ref": "#/$defs/palette"
+    }
+  },
+  "$defs": {
+    "colour": {
+      "type": "string",
+      "pattern": "^#[0-9A-Fa-f]{6}$",
+      "description": "An sRGB colour as #rrggbb."
+    },
+    "needs": {
+      "type": "object",
+      "additionalProperties": false,
+      "description": "What the person needs. Every field is optional.",
+      "properties": {
+        "contrast": {
+          "$ref": "#/$defs/contrast"
+        },
+        "font": {
+          "$ref": "#/$defs/font"
+        },
+        "reduce_motion": {
+          "type": "boolean",
+          "default": true,
+          "description": "No blinking, animation or smooth scrolling."
+        },
+        "cursor_size": {
+          "enum": [
+            "standard",
+            "large",
+            "extra_large"
+          ],
+          "description": "Large and extra large ask for a block cursor. Where only a bar is offered, the bar is two or three times the standard width."
+        },
+        "focus_ring_width_px": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 10,
+          "description": "The width of the keyboard focus outline in CSS pixels, for apps that can set it."
+        },
+        "line_spacing": {
+          "type": "number",
+          "minimum": 1,
+          "maximum": 3,
+          "description": "Line height as a multiple of the font size."
+        },
+        "character_spacing": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 0.5,
+          "description": "Extra space between letters as a fraction of the font size."
+        },
+        "column_width": {
+          "type": "integer",
+          "minimum": 20,
+          "maximum": 150,
+          "description": "The longest comfortable line in characters, shown as a ruler."
+        },
+        "single_column": {
+          "type": "boolean",
+          "description": "One column with nothing side by side. Read by apps with a layout to change."
+        },
+        "hide_decoration": {
+          "type": "boolean",
+          "description": "Hide decorative images and borders that carry no meaning. Read by apps with decoration to hide."
+        }
+      }
+    },
+    "contrast": {
+      "type": "object",
+      "additionalProperties": false,
+      "description": "The floors every colour pair is checked against.",
+      "properties": {
+        "text": {
+          "type": "number",
+          "minimum": 1,
+          "maximum": 21,
+          "default": 7,
+          "description": "WCAG 2.2 ratio for text and syntax colours on every surface they are drawn on."
+        },
+        "non_text": {
+          "type": "number",
+          "minimum": 1,
+          "maximum": 21,
+          "default": 3,
+          "description": "WCAG 2.2 ratio for borders, the focus ring and the selection block against the background."
+        },
+        "overlay": {
+          "type": "number",
+          "minimum": 1,
+          "maximum": 21,
+          "default": 4.5,
+          "description": "WCAG 2.2 ratio for syntax colours over the current line and a soft selection."
+        },
+        "terminal": {
+          "type": "number",
+          "minimum": 1,
+          "maximum": 21,
+          "default": 7,
+          "description": "WCAG 2.2 ratio for the sixteen terminal colours on the background."
+        },
+        "terminal_dim": {
+          "type": "number",
+          "minimum": 1,
+          "maximum": 21,
+          "default": 4.5,
+          "description": "WCAG 2.2 ratio for the terminal slots listed in palette.terminal.dim."
+        },
+        "highlight_distance": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 1,
+          "default": 0.08,
+          "description": "The smallest OKLab distance between the current line or a soft selection and the background."
+        },
+        "apca": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 108,
+          "description": "An optional APCA floor, as an absolute Lc value, checked on top of the WCAG ratio for text on the background."
+        }
+      }
+    },
+    "font": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "family": {
+          "type": "string",
+          "pattern": "^[^\"\\\\\\u0000-\\u001F\\u007F-\\u009F]*$",
+          "description": "A font family name with no quotes, backslashes or control characters. Empty or missing leaves each app on its own font."
+        },
+        "fallback": {
+          "enum": [
+            "sans_serif",
+            "serif",
+            "monospace"
+          ],
+          "description": "The generic family to use when the font is not installed."
+        },
+        "size_pt": {
+          "type": "number",
+          "minimum": 6,
+          "maximum": 96,
+          "description": "Text size in points."
+        }
+      }
+    },
+    "palette": {
+      "type": "object",
+      "additionalProperties": false,
+      "description": "Any colour left out is derived to meet the needs.",
+      "properties": {
+        "background": {
+          "$ref": "#/$defs/colour",
+          "description": "The main background every other colour is measured on."
+        },
+        "foreground": {
+          "$ref": "#/$defs/colour",
+          "description": "Default text."
+        },
+        "surface": {
+          "$ref": "#/$defs/colour",
+          "description": "Panels, bars, sidebars and floating windows."
+        },
+        "muted": {
+          "$ref": "#/$defs/colour",
+          "description": "Secondary text such as line numbers and descriptions."
+        },
+        "border": {
+          "$ref": "#/$defs/colour",
+          "description": "Borders and dividers."
+        },
+        "accent": {
+          "$ref": "#/$defs/colour",
+          "description": "The one accent: the active tab, the current search match and buttons."
+        },
+        "accent_foreground": {
+          "$ref": "#/$defs/colour",
+          "description": "Text drawn on the accent."
+        },
+        "link": {
+          "$ref": "#/$defs/colour",
+          "description": "Links."
+        },
+        "focus_ring": {
+          "$ref": "#/$defs/colour",
+          "description": "The outline that shows keyboard focus."
+        },
+        "cursor": {
+          "$ref": "#/$defs/colour",
+          "description": "The text cursor."
+        },
+        "cursor_text": {
+          "$ref": "#/$defs/colour",
+          "description": "The character under a block cursor."
+        },
+        "selection_background": {
+          "$ref": "#/$defs/colour",
+          "description": "The selection block where the selected text takes one colour."
+        },
+        "selection_foreground": {
+          "$ref": "#/$defs/colour",
+          "description": "Selected text on the selection block."
+        },
+        "selection_soft": {
+          "$ref": "#/$defs/colour",
+          "description": "A background-only selection, where selected text keeps its own colours."
+        },
+        "line_highlight": {
+          "$ref": "#/$defs/colour",
+          "description": "The band behind the current line."
+        },
+        "error": {
+          "$ref": "#/$defs/colour",
+          "description": "Error text."
+        },
+        "warning": {
+          "$ref": "#/$defs/colour",
+          "description": "Warning text."
+        },
+        "info": {
+          "$ref": "#/$defs/colour",
+          "description": "Information text."
+        },
+        "syntax": {
+          "$ref": "#/$defs/syntax"
+        },
+        "terminal": {
+          "$ref": "#/$defs/terminal"
+        }
+      }
+    },
+    "syntax": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "keyword": {
+          "$ref": "#/$defs/colour",
+          "description": "Declarations and other keywords such as const, class and fn. Drawn bold."
+        },
+        "control": {
+          "$ref": "#/$defs/colour",
+          "description": "Control flow such as if, return, for and import. Drawn bold."
+        },
+        "function": {
+          "$ref": "#/$defs/colour",
+          "description": "Function and method names."
+        },
+        "type": {
+          "$ref": "#/$defs/colour",
+          "description": "Types, classes, interfaces and enums."
+        },
+        "variable": {
+          "$ref": "#/$defs/colour",
+          "description": "Variables and identifiers."
+        },
+        "parameter": {
+          "$ref": "#/$defs/colour",
+          "description": "Function parameters. Drawn italic."
+        },
+        "property": {
+          "$ref": "#/$defs/colour",
+          "description": "Object properties, fields and keys."
+        },
+        "string": {
+          "$ref": "#/$defs/colour",
+          "description": "Strings and characters."
+        },
+        "number": {
+          "$ref": "#/$defs/colour",
+          "description": "Numbers, booleans and other constants."
+        },
+        "comment": {
+          "$ref": "#/$defs/colour",
+          "description": "Comments. Drawn italic and held to the same floor as code."
+        },
+        "operator": {
+          "$ref": "#/$defs/colour",
+          "description": "Operators and punctuation."
+        },
+        "tag": {
+          "$ref": "#/$defs/colour",
+          "description": "Markup tags. Drawn bold."
+        },
+        "attribute": {
+          "$ref": "#/$defs/colour",
+          "description": "Markup attributes."
+        },
+        "regex": {
+          "$ref": "#/$defs/colour",
+          "description": "Regular expressions and escapes."
+        },
+        "invalid": {
+          "$ref": "#/$defs/colour",
+          "description": "Invalid code. Drawn underlined."
+        },
+        "added": {
+          "$ref": "#/$defs/colour",
+          "description": "Added lines in a diff."
+        },
+        "removed": {
+          "$ref": "#/$defs/colour",
+          "description": "Removed lines in a diff."
+        },
+        "changed": {
+          "$ref": "#/$defs/colour",
+          "description": "Changed lines in a diff."
+        }
+      }
+    },
+    "terminal": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "ansi": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/colour"
+          },
+          "minItems": 16,
+          "maxItems": 16,
+          "description": "The sixteen ANSI colours, 0 to 7 normal and 8 to 15 bright."
+        },
+        "dim": {
+          "type": "array",
+          "items": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 15
+          },
+          "uniqueItems": true,
+          "description": "Slots checked at needs.contrast.terminal_dim instead of needs.contrast.terminal."
+        },
+        "background_slots": {
+          "type": "array",
+          "items": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 15
+          },
+          "uniqueItems": true,
+          "description": "Slots programs use as a background fill, so they are not checked as text."
+        }
+      }
+    }
+  }
+}

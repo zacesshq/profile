@@ -1,0 +1,49 @@
+name: Accessibility problem or missing need
+description: Something is hard to read, a need cannot be expressed or a target ignores one.
+labels: ["accessibility"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thank you for telling us. We treat an accessibility problem as a bug. You never need to share a diagnosis or anything personal: describe what was hard and we will work from that. If you would rather report privately, email contact@zacess.com.
+  - type: dropdown
+    id: kind
+    attributes:
+      label: What kind of problem
+      options:
+        - A rendered theme is hard to read
+        - A need I have cannot be written in a profile
+        - A target ignores a need the profile states
+        - The tool's own output is hard to read or use
+        - Something else
+    validations:
+      required: true
+  - type: textarea
+    id: hard
+    attributes:
+      label: What was hard
+      description: The app, the part of the screen and what made it hard. A screenshot helps if you can share one.
+      placeholder: Comments next to strings look the same to me in kitty with zacess-dark
+    validations:
+      required: true
+  - type: textarea
+    id: would-help
+    attributes:
+      label: What would help (optional)
+      description: If you know what would work better, for example a higher floor, a different colour or a setting the profile should carry.
+  - type: input
+    id: setup
+    attributes:
+      label: Display and settings (optional)
+      description: Anything that changes how colours look, such as a colour filter, night shift, inverted colours or a zoom level.
+      placeholder: macOS colour filters on, 150% zoom
+  - type: dropdown
+    id: ai-use
+    attributes:
+      label: AI use
+      description: "Required. Did AI help you find, test or check this? Write the title and description yourself either way. See the [AI policy](https://github.com/zacesshq/.github/blob/main/AI_POLICY.md). Dictation, translation and spelling tools do not count."
+      options:
+        - No AI was used
+        - "Yes: AI helped me find, test or check it"
+    validations:
+      required: true

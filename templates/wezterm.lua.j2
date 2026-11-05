@@ -1,0 +1,67 @@
+-- for WezTerm, from the profile {{ profile.name }}
+-- written by zprf; change the profile and render again rather than editing this file
+-- use it from wezterm.lua with: require("{{ profile.id }}").apply(config)
+
+local wezterm = require("wezterm")
+
+local M = {}
+
+M.colors = {
+  foreground = "{{ c.foreground }}",
+  background = "{{ c.background }}",
+  cursor_bg = "{{ c.cursor }}",
+  cursor_fg = "{{ c.cursor_text }}",
+  cursor_border = "{{ c.cursor }}",
+  selection_fg = "{{ c.selection_foreground }}",
+  selection_bg = "{{ c.selection_background }}",
+  split = "{{ c.border }}",
+  scrollbar_thumb = "{{ c.border }}",
+  ansi = {
+{% for colour in ansi[:8] %}
+    "{{ colour }}",
+{% endfor %}
+  },
+  brights = {
+{% for colour in ansi[8:] %}
+    "{{ colour }}",
+{% endfor %}
+  },
+  tab_bar = {
+    background = "{{ c.surface }}",
+    active_tab = { bg_color = "{{ c.accent }}", fg_color = "{{ c.accent_foreground }}", intensity = "Bold" },
+    inactive_tab = { bg_color = "{{ c.surface }}", fg_color = "{{ c.muted }}" },
+    inactive_tab_hover = { bg_color = "{{ c.surface }}", fg_color = "{{ c.foreground }}" },
+    new_tab = { bg_color = "{{ c.surface }}", fg_color = "{{ c.muted }}" },
+    new_tab_hover = { bg_color = "{{ c.surface }}", fg_color = "{{ c.foreground }}" },
+  },
+}
+
+function M.apply(config)
+  config.colors = M.colors
+{% if needs.reduce_motion or needs.block_cursor %}
+  -- WezTerm's own cursor is a steady block, so this stops blinking without changing the shape
+  config.default_cursor_style = "SteadyBlock"
+{% endif %}
+{% if needs.reduce_motion %}
+  config.cursor_blink_rate = 0
+  config.text_blink_rate = 0
+  config.text_blink_rate_rapid = 0
+  config.animation_fps = 1
+  config.visual_bell = { fade_in_duration_ms = 0, fade_out_duration_ms = 0 }
+{% endif %}
+{% if needs.block_cursor %}
+  config.cursor_thickness = "{{ needs.cursor_width_px }}px"
+{% endif %}
+{% if needs.font_family %}
+  config.font = wezterm.font_with_fallback({ "{{ needs.font_family }}" })
+{% endif %}
+{% if needs.font_size_pt %}
+  config.font_size = {{ needs.font_size_pt }}
+{% endif %}
+{% if needs.line_spacing %}
+  config.line_height = {{ needs.line_spacing }}
+{% endif %}
+  return config
+end
+
+return M

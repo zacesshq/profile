@@ -1,0 +1,49 @@
+# for Alacritty, from the profile {{ profile.name }}
+# written by zprf; change the profile and render again rather than editing this file
+# load it from alacritty.toml with: [general] import = ["<path to this file>"]
+
+[colors.primary]
+background = "{{ c.background }}"
+foreground = "{{ c.foreground }}"
+
+[colors.cursor]
+cursor = "{{ c.cursor }}"
+text = "{{ c.cursor_text }}"
+
+[colors.selection]
+background = "{{ c.selection_background }}"
+text = "{{ c.selection_foreground }}"
+
+{% set names = ["black", "red", "green", "yellow", "blue", "magenta", "cyan", "white"] %}
+[colors.normal]
+{% for name in names %}
+{{ name }} = "{{ ansi[loop.index0] }}"
+{% endfor %}
+
+[colors.bright]
+{% for name in names %}
+{{ name }} = "{{ ansi[loop.index0 + 8] }}"
+{% endfor %}
+
+{% if needs.block_cursor or needs.reduce_motion %}
+[cursor.style]
+{% if needs.block_cursor %}
+shape = "Block"
+{% endif %}
+{% if needs.reduce_motion %}
+blinking = "Never"
+{% endif %}
+{% endif %}
+{% if needs.font_family or needs.font_size_pt or needs.line_gap_px %}
+
+[font]
+{% if needs.font_size_pt %}
+size = {{ needs.font_size_pt }}
+{% endif %}
+{% if needs.line_gap_px %}
+offset = { x = 0, y = {{ needs.line_gap_px }} }
+{% endif %}
+{% if needs.font_family %}
+normal = { family = "{{ needs.font_family }}" }
+{% endif %}
+{% endif %}

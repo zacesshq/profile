@@ -1,7 +1,7 @@
 # Store listing
 
-The text and assets for the Chrome Web Store and Firefox Add-ons listings. Nothing is published
-yet.
+The text and assets for the Chrome Web Store, Firefox Add-ons and Microsoft Edge Add-ons listings.
+Version 0.2.1 is submitted to all three. The listings are linked from the [README](README.md#install).
 
 ## Listing text
 

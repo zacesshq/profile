@@ -44,8 +44,9 @@ release.
 
 - **winget.** The first submission, `Zacess.Profile` 0.2.0, is waiting for review in
   microsoft/winget-pkgs. Once it is accepted, each release opens the next one by itself
-- **Extension store listings.** The listing text, icons, promotional tile and a real screenshot
-  are ready in [extension/STORE.md](extension/STORE.md). Nothing is published to a store yet
+- **Extension store listings.** Version 0.2.1 is in review on the Chrome Web Store, Firefox
+  Add-ons and Microsoft Edge Add-ons. Each listing is linked from the
+  [README](README.md#browser-extension) and opens once its review is done
 - **Terminal colours against the default text.** The Zacess themes also check each terminal colour
   against the default text in tone and under each simulation. That needs two new spec fields first:
   the slots that stand for the default text and the slots allowed to sit near it

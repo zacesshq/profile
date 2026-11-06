@@ -5,8 +5,18 @@ A WebExtension (Manifest V3, TypeScript, no framework) that applies a
 and Firefox from one source.
 
 What it applies, need by need, is listed in
-[ACCESSIBILITY.md](../ACCESSIBILITY.md#the-browser-extension). It is not in any store yet:
-[STORE.md](STORE.md) holds the listing text and the store assets.
+[ACCESSIBILITY.md](../ACCESSIBILITY.md#the-browser-extension). [STORE.md](STORE.md) holds the
+listing text and the store assets.
+
+## Install
+
+| Browser | Store |
+| --- | --- |
+| Chrome | [Chrome Web Store](https://chromewebstore.google.com/detail/afbflpkolnhidmopegadfnlhenhjkpdc) |
+| Firefox | [Firefox Add-ons](https://addons.mozilla.org/firefox/addon/zacess-profile/) |
+| Microsoft Edge | [Microsoft Edge Add-ons](https://microsoftedge.microsoft.com/addons/detail/kdihhdkcphgpaibeemcgheifijflonbg) |
+
+Each listing opens once that store's review is done. Until then, load it unpacked as below.
 
 ## How it works
 

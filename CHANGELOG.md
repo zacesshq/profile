@@ -10,6 +10,8 @@ Every notable change to Zacess Profile is listed here. The format follows
 ### Added
 
 - A dark and a light banner and a 1280 by 640 social preview image in `assets/`, beside the mark.
+- The browser extension is submitted to the Chrome Web Store, Firefox Add-ons and Microsoft Edge
+  Add-ons. The README and the extension's README link each listing.
 
 ## [0.2.1] - 2026-11-05
 

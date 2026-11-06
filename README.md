@@ -203,11 +203,16 @@ with no colour left to derive. CI keeps it that way.
 
 ## Browser extension
 
-The [extension](extension) applies a profile to every web page in Chrome and Firefox through CSS
-custom properties: colours, font, a minimum text size, spacing, line length, the focus ring and
+The [extension](extension) applies a profile to every web page in Chrome, Edge and Firefox through
+CSS custom properties: colours, font, a minimum text size, spacing, line length, the focus ring and
 reduced motion. Its options page reads the same TOML and checks it against the
-[JSON Schema](spec/profile.schema.json). It is not in the browser stores yet. Load it unpacked by
-following [extension/README.md](extension/README.md).
+[JSON Schema](spec/profile.schema.json).
+
+Install it from the [Chrome Web Store](https://chromewebstore.google.com/detail/afbflpkolnhidmopegadfnlhenhjkpdc),
+[Firefox Add-ons](https://addons.mozilla.org/firefox/addon/zacess-profile/) or
+[Microsoft Edge Add-ons](https://microsoftedge.microsoft.com/addons/detail/kdihhdkcphgpaibeemcgheifijflonbg). Each listing
+opens once that store's review is done. To build it yourself, follow
+[extension/README.md](extension/README.md).
 
 ## Roadmap
 

@@ -1,6 +1,6 @@
 {
   "name": "zacess-profile-extension",
-  "version": "0.2.1",
+  "version": "0.2.2",
   "private": true,
   "description": "Applies a Zacess Profile to every page through CSS custom properties",
   "license": "Apache-2.0",

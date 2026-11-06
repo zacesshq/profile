@@ -7,6 +7,8 @@ Every notable change to Zacess Profile is listed here. The format follows
 
 ## [Unreleased]
 
+## [0.2.2] - 2026-11-06
+
 ### Added
 
 - A dark and a light banner and a 1280 by 640 social preview image in `assets/`, beside the mark.
@@ -141,7 +143,8 @@ Every notable change to Zacess Profile is listed here. The format follows
 
 - Routine tidy-up.
 
-[Unreleased]: https://github.com/zacesshq/profile/compare/v0.2.1...HEAD
+[Unreleased]: https://github.com/zacesshq/profile/compare/v0.2.2...HEAD
+[0.2.2]: https://github.com/zacesshq/profile/compare/v0.2.1...v0.2.2
 [0.2.1]: https://github.com/zacesshq/profile/compare/v0.2.0...v0.2.1
 [0.2.0]: https://github.com/zacesshq/profile/compare/v0.1.0...v0.2.0
 [0.1.0]: https://github.com/zacesshq/profile/releases/tag/v0.1.0

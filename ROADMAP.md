@@ -40,6 +40,11 @@ release.
   [zacess.com](https://zacess.com/profile/), which now has a page and full documentation for
   Zacess Profile
 
+### In version 0.2.2
+
+- The browser extension is submitted to the Chrome Web Store, Firefox Add-ons and Microsoft Edge
+  Add-ons, with each listing linked from the README
+
 ## Next
 
 - **winget.** The first submission, `Zacess.Profile` 0.2.0, is waiting for review in

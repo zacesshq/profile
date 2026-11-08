@@ -16,7 +16,7 @@ listing text and the store assets.
 | Firefox | [Firefox Add-ons](https://addons.mozilla.org/firefox/addon/zacess-profile/) |
 | Microsoft Edge | [Microsoft Edge Add-ons](https://microsoftedge.microsoft.com/addons/detail/kdihhdkcphgpaibeemcgheifijflonbg) |
 
-Each listing opens once that store's review is done. Until then, load it unpacked as below.
+To load it unpacked instead, follow the steps below.
 
 ## How it works
 

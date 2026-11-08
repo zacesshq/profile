@@ -45,13 +45,15 @@ release.
 - The browser extension is submitted to the Chrome Web Store, Firefox Add-ons and Microsoft Edge
   Add-ons, with each listing linked from the README
 
+### In version 1.0.0
+
+- Ten starter profiles: Zacess Warm Dark and Zacess Warm Light join the eight Zacess themes, the
+  gentler pair with the 4.5:1 text floor the palette sets for them
+
 ## Next
 
 - **winget.** The first submission, `Zacess.Profile` 0.2.0, is waiting for review in
   microsoft/winget-pkgs. Once it is accepted, each release opens the next one by itself
-- **Extension store listings.** Version 0.2.1 is in review on the Chrome Web Store, Firefox
-  Add-ons and Microsoft Edge Add-ons. Each listing is linked from the
-  [README](README.md#browser-extension) and opens once its review is done
 - **Terminal colours against the default text.** The Zacess themes also check each terminal colour
   against the default text in tone and under each simulation. That needs two new spec fields first:
   the slots that stand for the default text and the slots allowed to sit near it

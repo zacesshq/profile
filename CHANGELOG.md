@@ -7,6 +7,33 @@ Every notable change to Zacess Profile is listed here. The format follows
 
 ## [Unreleased]
 
+## [1.0.0] - 2026-11-08
+
+### Added
+
+- Zacess Warm Dark and Zacess Warm Light as starter profiles (`zacess-warm-dark` and
+  `zacess-warm-light`), from the Zacess themes palette, so the family is ten. They are the gentler
+  pair for anyone who finds high contrast too intense and, like the themes, set a 4.5:1 text and
+  terminal floor. Every other floor and the colour vision checks are unchanged and both pass.
+- A test that holds every other starter profile to its 7:1 text and terminal floors.
+
+### Changed
+
+- The README and the extension guide link the Chrome Web Store, Firefox Add-ons and Microsoft Edge Add-ons listings directly.
+- README, CONTRIBUTING, ACCESSIBILITY.md, the ROADMAP, the packaging README and the Homebrew
+  caveats count ten starter profiles. ACCESSIBILITY.md lists the measured ratios and closest pairs
+  for Warm Dark and Warm Light and explains their 4.5:1 floor. The ROADMAP lists the two new
+  starter profiles under Next.
+- The header comment of every starter profile says it is one of ten and names the themes palette
+  0.12.1 it was taken from.
+- The bug report form lists `watch` and `os --print` as commands and its version placeholder
+  reads zprf 0.2.2.
+
+### Fixed
+
+- The closest colour vision pairs in ACCESSIBILITY.md for Zacess Light, Zacess Cream and Zacess
+  Deep Contrast Light now match what `check` measures.
+
 ## [0.2.2] - 2026-11-06
 
 ### Added

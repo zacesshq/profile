@@ -25,7 +25,7 @@ manifests) in the same pull request as `Cargo.toml`. `tests/packaging.rs` fails 
 
 ## What each archive holds
 
-`zacess-profile-vX.Y.Z-<target>.tar.gz` (`.zip` on Windows) holds the `zprf` binary, the eight
+`zacess-profile-vX.Y.Z-<target>.tar.gz` (`.zip` on Windows) holds the `zprf` binary, the ten
 starter profiles in `profiles/`, the spec in `spec/` and the README, licence, notice, changelog,
 roadmap and accessibility statement. The targets are `aarch64-apple-darwin`, `x86_64-apple-darwin`,
 `x86_64-unknown-linux-musl`, `aarch64-unknown-linux-musl` and `x86_64-pc-windows-msvc`. The Linux

@@ -1,31 +1,31 @@
-# Homebrew formula for Zacess Profile 0.2.2, for Formula/zacess-profile.rb in the zacesshq/homebrew-tap
+# Homebrew formula for Zacess Profile 1.0.0, for Formula/zacess-profile.rb in the zacesshq/homebrew-tap
 # repository. Each SHA256_ placeholder is the sum from the matching .sha256 file attached to the
-# v0.2.2 release; packaging/fill-checksums.sh fills them in. The next release changes the version
+# v1.0.0 release; packaging/fill-checksums.sh fills them in. The next release changes the version
 # in the four URLs and the four sums.
 class ZacessProfile < Formula
   desc "One accessibility profile for every app, checked for contrast and colour vision"
   homepage "https://zacess.com"
-  version "0.2.2"
+  version "1.0.0"
   license "Apache-2.0"
 
   on_macos do
     on_arm do
-      url "https://github.com/zacesshq/profile/releases/download/v0.2.2/zacess-profile-v0.2.2-aarch64-apple-darwin.tar.gz"
+      url "https://github.com/zacesshq/profile/releases/download/v1.0.0/zacess-profile-v1.0.0-aarch64-apple-darwin.tar.gz"
       sha256 "SHA256_AARCH64_APPLE_DARWIN"
     end
     on_intel do
-      url "https://github.com/zacesshq/profile/releases/download/v0.2.2/zacess-profile-v0.2.2-x86_64-apple-darwin.tar.gz"
+      url "https://github.com/zacesshq/profile/releases/download/v1.0.0/zacess-profile-v1.0.0-x86_64-apple-darwin.tar.gz"
       sha256 "SHA256_X86_64_APPLE_DARWIN"
     end
   end
 
   on_linux do
     on_arm do
-      url "https://github.com/zacesshq/profile/releases/download/v0.2.2/zacess-profile-v0.2.2-aarch64-unknown-linux-musl.tar.gz"
+      url "https://github.com/zacesshq/profile/releases/download/v1.0.0/zacess-profile-v1.0.0-aarch64-unknown-linux-musl.tar.gz"
       sha256 "SHA256_AARCH64_UNKNOWN_LINUX_MUSL"
     end
     on_intel do
-      url "https://github.com/zacesshq/profile/releases/download/v0.2.2/zacess-profile-v0.2.2-x86_64-unknown-linux-musl.tar.gz"
+      url "https://github.com/zacesshq/profile/releases/download/v1.0.0/zacess-profile-v1.0.0-x86_64-unknown-linux-musl.tar.gz"
       sha256 "SHA256_X86_64_UNKNOWN_LINUX_MUSL"
     end
   end
@@ -38,7 +38,7 @@ class ZacessProfile < Formula
 
   def caveats
     <<~EOS
-      The eight starter profiles are in:
+      The ten starter profiles are in:
         #{opt_pkgshare}/profiles
     EOS
   end

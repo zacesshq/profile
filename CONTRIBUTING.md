@@ -73,12 +73,14 @@ raises `spec_version`.
 
 ## Changing a starter profile
 
-The eight profiles in `profiles/` carry the measured palette of the
+The ten profiles in `profiles/` carry the measured palette of the
 [Zacess themes](https://github.com/zacesshq/themes). A colour change belongs in the themes palette
 first, then here, so the two stay identical. The one exception today is the warning colour of five
 profiles, moved so errors and warnings stay apart under colour vision deficiencies. Each file
 names the themes' colour beside it. `tests/profiles.rs` fails if a profile leaves any colour to
-derive or misses any floor.
+derive or misses any floor. Each profile states the themes' text floor: 7:1 for eight of them and
+4.5:1 for Zacess Warm Dark and Warm Light, which the themes mark with a per-theme `textContrast`.
+The same test fails if any other starter profile states less than 7:1.
 
 ## Making a release
 

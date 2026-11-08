@@ -36,7 +36,7 @@ fn check_passes_every_shipped_profile() {
     args.extend(files.iter().map(String::as_str));
     let out = run(&args);
     assert!(out.status.success(), "{}", text(&out));
-    assert!(text(&out).contains("8 of 8 profiles pass"));
+    assert!(text(&out).contains("10 of 10 profiles pass"));
 }
 
 #[test]

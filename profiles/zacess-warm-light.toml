@@ -1,0 +1,79 @@
+# the Zacess Warm Light theme as a profile, one of the ten starter profiles
+# colours from the Zacess themes palette 0.12.1
+# a gentler pair: the themes hold it to a 4.5:1 text floor rather than 7:1, so the profile states
+# the same floor and is checked against it
+
+spec_version = 1
+name = "Zacess Warm Light"
+id = "zacess-warm-light"
+description = "Dark brown on warm paper with earthy amber, rust, olive and teal, a gentler theme for anyone who finds high contrast too intense."
+appearance = "light"
+
+[needs]
+reduce_motion = true
+cursor_size = "standard"
+focus_ring_width_px = 2
+
+[needs.contrast]
+text = 4.5
+non_text = 3.0
+overlay = 4.5
+terminal = 4.5
+terminal_dim = 4.5
+highlight_distance = 0.08
+colour_vision_distance = 0.04
+tone_difference = 0.05
+
+[needs.font]
+family = "Atkinson Hyperlegible Mono"
+fallback = "monospace"
+size_pt = 14
+
+[palette]
+background = "#f4ead5"
+foreground = "#342410"
+surface = "#ece1ca"
+surface_alt = "#e4d8be"
+muted = "#483b2c"
+border = "#7e6f5f"
+accent = "#6d3b02"
+accent_foreground = "#f4ead5"
+link = "#6d3b02"
+focus_ring = "#6d3b02"
+cursor = "#5b1301"
+cursor_text = "#f4ead5"
+selection_background = "#215779"
+selection_foreground = "#f4ead5"
+selection_soft = "#a0d2fe"
+line_highlight = "#d0cec0"
+error = "#710205"
+warning = "#623d02"
+info = "#01385c"
+
+[palette.syntax]
+keyword = "#832a01"
+control = "#760244"
+function = "#744f01"
+type = "#045247"
+variable = "#342410"
+parameter = "#723902"
+property = "#02318d"
+string = "#04523a"
+number = "#962b70"
+comment = "#625240"
+operator = "#342410"
+tag = "#930e04"
+attribute = "#8c4105"
+regex = "#064045"
+invalid = "#62020b"
+added = "#08651b"
+removed = "#790411"
+changed = "#04488d"
+
+[palette.terminal]
+ansi = [
+    "#342410", "#8c1a16", "#275200", "#6a4603",
+    "#014b79", "#742c60", "#05514d", "#574e44",
+    "#60574c", "#a4332b", "#386616", "#845701",
+    "#115f93", "#8a4074", "#066662", "#342410",
+]

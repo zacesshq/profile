@@ -17,8 +17,8 @@ fn toml_files(dir: &str) -> Vec<PathBuf> {
 }
 
 #[test]
-fn there_are_eight_starter_profiles() {
-    assert_eq!(toml_files("profiles").len(), 8);
+fn there_are_ten_starter_profiles() {
+    assert_eq!(toml_files("profiles").len(), 10);
 }
 
 #[test]
@@ -42,6 +42,28 @@ fn every_shipped_profile_is_complete_and_passes() {
         );
         // every pair class is exercised, so a profile cannot pass by checking less
         assert!(report.pairs.len() >= 100, "{}", path.display());
+    }
+}
+
+#[test]
+fn only_the_warm_pair_lowers_the_text_floor() {
+    // the themes give Warm Dark and Warm Light a per-theme 4.5:1 text floor; every other starter
+    // profile must keep 7:1, so the gentler pair can never be used to weaken the rest
+    let warm = ["zacess-warm-dark", "zacess-warm-light"];
+    for path in toml_files("profiles") {
+        let profile = Profile::load(&path).unwrap();
+        let c = &profile.needs.contrast;
+        let floor = if warm.contains(&profile.slug().as_str()) {
+            4.5
+        } else {
+            7.0
+        };
+        assert_eq!(c.text, floor, "{} text floor", path.display());
+        assert_eq!(c.terminal, floor, "{} terminal floor", path.display());
+        assert_eq!(c.non_text, 3.0, "{} non-text floor", path.display());
+        assert_eq!(c.overlay, 4.5, "{} overlay floor", path.display());
+        assert_eq!(c.colour_vision_distance, 0.04, "{}", path.display());
+        assert_eq!(c.tone_difference, 0.05, "{}", path.display());
     }
 }
 

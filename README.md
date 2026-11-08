@@ -86,7 +86,7 @@ cargo install --path .
 
 ## Quick start
 
-Check one of the eight starter profiles, then write its files into a folder of your choosing:
+Check one of the ten starter profiles, then write its files into a folder of your choosing:
 
 ```sh
 zprf check profiles/zacess-deep-contrast-dark.toml
@@ -153,7 +153,7 @@ bars and inactive tabs.
 | `non_text` | 3:1 | Borders and the focus ring on the background and on panels. The selection block against the background |
 | `overlay` | 4.5:1 | Every syntax colour over the current line and over a soft selection. Muted text, links, errors, warnings, information and the accent over the current line |
 | `terminal` | 7:1 | The sixteen ANSI colours on the background, apart from slots listed as background fills |
-| `terminal_dim` | 4.5:1 | ANSI slots a profile lists in `palette.terminal.dim`, which the light starter profiles use to keep their colours vivid |
+| `terminal_dim` | 4.5:1 | ANSI slots a profile lists in `palette.terminal.dim`, which four of the light starter profiles use to keep their colours vivid |
 | `highlight_distance` | 0.08 | OKLab distance between the background and both the current line and a soft selection, so each stays visible |
 | `colour_vision_distance` | 0.04 | OKLab distance between paired colours under simulated protanopia, deuteranopia and tritanopia (Machado, Oliveira and Fernandes, 2009) |
 | `tone_difference` | 0.05 | Difference in tone, the cube root of relative luminance, between paired colours, so they differ with no colour vision at all |
@@ -187,8 +187,10 @@ has the steps.
 
 ## Starter profiles
 
-The eight Zacess themes ship as complete profiles in [profiles](profiles). Each one passes `check`
-with no colour left to derive. CI keeps it that way.
+The ten Zacess themes ship as complete profiles in [profiles](profiles). Each one passes `check`
+with no colour left to derive. CI keeps it that way. Eight hold text to 7:1. Zacess Warm Dark and
+Warm Light are the gentler pair for anyone who finds high contrast too intense: like the themes, they
+set `text = 4.5` and `terminal = 4.5`, so they are checked against 4.5:1 instead.
 
 | Profile | Background | Text | Text contrast |
 | --- | --- | --- | --- |
@@ -200,6 +202,8 @@ with no colour left to derive. CI keeps it that way.
 | `zacess-high-contrast-light` | `#ffffff` | `#000000` | 21.00:1 |
 | `zacess-deep-contrast-dark` | `#000000` | `#ffffff` | 21.00:1 |
 | `zacess-deep-contrast-light` | `#ffffff` | `#000000` | 21.00:1 |
+| `zacess-warm-dark` | `#211b17` | `#e5d5b6` | 11.77:1 |
+| `zacess-warm-light` | `#f4ead5` | `#342410` | 12.50:1 |
 
 ## Browser extension
 
@@ -210,8 +214,7 @@ reduced motion. Its options page reads the same TOML and checks it against the
 
 Install it from the [Chrome Web Store](https://chromewebstore.google.com/detail/afbflpkolnhidmopegadfnlhenhjkpdc),
 [Firefox Add-ons](https://addons.mozilla.org/firefox/addon/zacess-profile/) or
-[Microsoft Edge Add-ons](https://microsoftedge.microsoft.com/addons/detail/kdihhdkcphgpaibeemcgheifijflonbg). Each listing
-opens once that store's review is done. To build it yourself, follow
+[Microsoft Edge Add-ons](https://microsoftedge.microsoft.com/addons/detail/kdihhdkcphgpaibeemcgheifijflonbg). To build it yourself, follow
 [extension/README.md](extension/README.md).
 
 ## Roadmap

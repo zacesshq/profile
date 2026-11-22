@@ -53,6 +53,17 @@ test.beforeAll(async () => {
   let [worker] = context.serviceWorkers();
   worker ??= await context.waitForEvent("serviceworker");
   extensionId = new URL(worker.url()).host;
+
+  // a fresh install opens the options page by itself (src/background.ts). If that tab arrives while a
+  // test is opening the same page, it interrupts the test's navigation, so it is waited for and closed
+  // before any test runs
+  const isOptions = (url: string) => url === `chrome-extension://${extensionId}/options.html`;
+  let installTab = context.pages().find((p) => isOptions(p.url()));
+  if (!installTab) {
+    installTab = await context.waitForEvent("page", { timeout: 10_000 }).catch(() => undefined);
+    await installTab?.waitForURL((url) => isOptions(url.href), { timeout: 10_000 }).catch(() => undefined);
+  }
+  await installTab?.close();
 });
 
 test.afterAll(async () => {

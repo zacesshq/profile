@@ -7,6 +7,10 @@ Every notable change to Zacess Profile is listed here. The format follows
 
 ## [Unreleased]
 
+### Fixed
+
+- The browser extension test no longer fails now and then: it waits for the options page a fresh install opens by itself before opening its own.
+
 ## [1.0.0] - 2026-11-08
 
 ### Added
